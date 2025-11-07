@@ -1,6 +1,5 @@
 # Particle System application
-This Particle system application is developed using the Walnut app Template from StudioCherno: https://github.com/StudioCherno/Walnut
-This is a personal app using that template. Original template readme is being modified for brevity and ease of use.
+This Particle system application is developed using the Walnut app Template from StudioCherno: https://github.com/StudioCherno/Walnut. This is a personal app using that template. Original template readme is being modified for brevity and ease of use.
 
 # Walnut
 Walnut is a simple application framework built with Dear ImGui and designed to be used with Vulkan - basically this means you can seemlessly blend real-time Vulkan rendering with a great UI library to build desktop applications. The plan is to expand Walnut to include common utilities to make immediate-mode desktop apps and simple Vulkan applications.
