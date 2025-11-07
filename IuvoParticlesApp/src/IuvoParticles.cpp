@@ -1,6 +1,5 @@
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
-
 #include "Walnut/Image.h"
 
 class ExampleLayer : public Walnut::Layer
@@ -112,7 +111,7 @@ public:
 	bool BS_quat_rot = false;
 
 	/// Particle Properties
-	bool particle_3D = false;
+	bool particle_3D = true;
 	bool billboard = false;
 	bool animated = false;
 
@@ -123,9 +122,13 @@ public:
 		is_active = ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), max);
 		if (is_active)
 		{
-			ImGui::Checkbox("3D Particles", &particle_3D);
+			if (ImGui::Checkbox("3D Particles", &particle_3D)) {
+				billboard = false;
+			}
 			ImGui::SameLine();
-			ImGui::Checkbox("Billboard Particles", &billboard);
+			if (ImGui::Checkbox("Billboard Particles", &billboard)) {
+				particle_3D = false;
+			}
 			ImGui::SameLine();
 			ImGui::Separator();
 		}
