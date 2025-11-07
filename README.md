@@ -1,4 +1,4 @@
-#Particle System application
+##Particle System application
 This Particle system application is developed using the Walnut app Template from StudioCherno: https://github.com/StudioCherno/Walnut
 This is a personal app using that template. Original template readme is being modified for brevity and ease of use.
 
