@@ -1,6 +1,7 @@
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Image.h"
+#include "RectParticle.h"
 
 class ExampleLayer : public Walnut::Layer
 {
@@ -424,6 +425,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	Walnut::Application* app = new Walnut::Application(spec);
 	//app->PushLayer<ExampleLayer>();
 	app->PushLayer<ParticleLayer>();
+	app->PushLayer<Particles::IMGUI_2D_PARTICLE_LAYER>();
 	app->SetMenubarCallback([app]()
 		{
 			if (ImGui::BeginMenu("File"))
