@@ -118,7 +118,7 @@ public:
 
 	virtual void OnUIRender() override {
 
-		ImGui::Begin("Particle Properties");
+		ImGui::Begin("Particle Details");
 		ImVec2 max = ImVec2(ImGui::GetWindowContentRegionMax().x * 2.0f, ImGui::GetWindowContentRegionMax().y * 2.0f);
 		is_active = ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), max);
 		if (is_active)
@@ -424,8 +424,8 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 
 	Walnut::Application* app = new Walnut::Application(spec);
 	//app->PushLayer<ExampleLayer>();
-	app->PushLayer<ParticleLayer>();
-	app->PushLayer<Particles::IMGUI_2D_PARTICLE_LAYER>();
+	//app->PushLayer<ParticleLayer>();
+	app->PushLayer<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
 	app->SetMenubarCallback([app]()
 		{
 			if (ImGui::BeginMenu("File"))
