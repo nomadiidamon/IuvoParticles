@@ -1,48 +1,28 @@
 #pragma once
-#include "Walnut/Application.h"
-#include "Walnut/Image.h"
 #include <algorithm>
+#include <random>
 
 namespace Particles {
 
-	template <typename T>
-	class Range {
-	public:
-		T min;
-		T max;
-		T val;
-
-		bool autoClamp = true;
-
-		Range(T minimum, T maximum, T val)
-			: min(minimum), max(maximum), val(val) {
-
-		}
-
-		virtual void Clamp() {
-			if (autoClamp) {
-				if (val < min) val = min;
-				if (val > max) val = max;
-			}
-		}
-
-		virtual void SetValue(T newVal) {
-			val = newVal;
-			Clamp();
-		}
-
-		virtual void Randomize() {
-			val = min + static_cast <T> (rand()) / (static_cast <T> (RAND_MAX / (max - min)));
-		}
-
-	};
-
+	static std::mt19937& GetRNG() {
+		static std::random_device rd;
+		static std::mt19937 mt(rd());
+		return mt;
+	}
+	static float RandFloat(float a, float b) {
+		std::uniform_real_distribution<float> dist(a, b);
+		return dist(GetRNG());
+	}
+	static int RandInt(int a, int b) {
+		std::uniform_int_distribution<int> dist(a, b);
+		return dist(GetRNG());
+	}
 
 	struct ParticleColor {
-		ImVec4 p_startColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-		ImVec4 p_endColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-		ImVec4 p_currColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-		float p_lerpSpeed = 0.0f;
+		ImVec4 p_startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		ImVec4 p_endColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+		ImVec4 p_currColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		float  p_lerpSpeed = 0.25f;
 
 		bool p_lerpColor = false;
 		bool p_fadeColor = true;
@@ -58,22 +38,23 @@ namespace Particles {
 	};
 
 	struct ParticleTransform {
-		ImVec2 pt_position = ImVec2(0.0f, 0.0f);
-		ImVec2 pt_center = ImVec2(0.0f, 0.0f);
+		ImVec2 p_position = ImVec2(0.0f, 0.0f);
+		ImVec2 p_center = ImVec2(0.0f, 0.0f);
 
-		ImVec2 pt_size = ImVec2(0.0f, 0.0f);
+		ImVec2 p_size = ImVec2(50.0f, 50.0f);
+		ImVec2 p_baseSize = ImVec2(50.0f, 50.0f); // store base size to compute non-destructive scaling each frame
 		ImVec2 p_rotation = ImVec2(0.0f, 0.0f); // using x as angle in degrees for 2D rotation
 
-		bool p_randomSize;
-		bool p_randomRotation;
+		bool p_randomSize = false;
+		bool p_randomRotation = false;
 	};
 
 	struct ParticleAnimation2D {
 		ImVec2 p_velocity = ImVec2(0.0f, 0.0f);
 
-		float p_movementSpeed = 0.0f;
-		float p_rotationSpeed = 0.0f;
-		float p_scaleSpeed = 0.0f;
+		float p_movementSpeed = 0.35f;
+		float p_rotationSpeed = 0.35f; // degrees per second
+		float p_scaleSpeed = 0.35f;
 
 		bool canMove = true;
 		bool canRotate = true;
@@ -87,363 +68,581 @@ namespace Particles {
 		ParticleLifetime rp_lifetimeData;
 	};
 
-	static class RectParticleUtils {
-	public:
-		static RectParticle CreateRandomParticle(const ImVec2& view_size, const ImVec2& position = ImVec2(0.0f, 0.0f), const RectParticle& defaultParticle = RectParticle()) {
-			RectParticle particle;
+    class RectParticleController {
+    public:
+        RectParticleController(RectParticle& p) : particle(p) {}
 
-#pragma region Particle Transform
-			// Particle Position
-			if (position.x != 0.0f || position.y != 0.0f) {
-				particle.rp_transform.pt_position = position;
-			}
-			else
-			{
-				particle.rp_transform.pt_position = ImVec2(rand() % (int)view_size.x, rand() % (int)view_size.y);
-			}
+        // single-frame update. Mirrors old UpdateParticle semantics.
+        void Update(float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+            if (IsExpired()) {
+                Reset(view_size, useDefaultParticle, defaultParticle);
+                return;
+            }
 
-			// Particle rotation
-			if (particle.rp_transform.p_randomRotation) {
-				particle.rp_transform.p_rotation.x = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 360.0f));
-			}
-			else
-			{
+            // bounds check — account for size
+            if (HitViewportBounds(view_size)) {
+                ApplyReboundForce(view_size);
+            }
 
-			}
+            if (particle.rp_animation.canMove) ApplyVelocity(ts);
+            if (particle.rp_animation.canRotate) ApplyRotation(ts);
+            if (particle.rp_animation.canScale) ApplyScale(ts);
 
-			// Particle Center
-			particle.rp_transform.pt_center = ImVec2(particle.rp_transform.pt_position.x + particle.rp_transform.pt_size.x / 2.0f,
-				particle.rp_transform.pt_position.y + particle.rp_transform.pt_size.y / 2.0f);
+            UpdateLifetime(ts);
+            UpdateColor();
+        }
 
-			// Particle Size
-			if (particle.rp_transform.p_randomSize) {
-				// Random size between 5.0 and 20.0
-				particle.rp_transform.pt_size = ImVec2(10.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 200.0f)),
-					10.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 200.0f)));
-			}
-			else {
-				particle.rp_transform.pt_size = ImVec2(10.0f, 10.0f);
-			}
-#pragma endregion
+        // Expose smaller operations so external code can call granular steps (keeps public for users)
+        void ApplyVelocity(float ts) {
+            particle.rp_transform.p_position.x += particle.rp_animation.p_velocity.x * ts * particle.rp_animation.p_movementSpeed;
+            particle.rp_transform.p_position.y += particle.rp_animation.p_velocity.y * ts * particle.rp_animation.p_movementSpeed;
+            UpdateCenter();
+        }
 
-#pragma region Particle Animation 2D
-			// Particle rotation speed between -90.0 and 90.0 degrees per second
-			particle.rp_animation.p_rotationSpeed = -45.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 180.0f));
+        void ApplyRotation(float ts) {
+            particle.rp_transform.p_rotation.x += particle.rp_animation.p_rotationSpeed * ts;
+            NormalizeRotation();
+        }
 
-			// Particle velocity direction
-			float angle = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (2.0f * 3.14159f)));
-			particle.rp_animation.p_velocity = ImVec2(cos(angle), sin(angle));
+        void ApplyScale(float ts) {
+            // Non-destructive oscillating scale around base size (0.5 .. 1.5)
+            float scaleAmount = sinf(particle.rp_lifetimeData.p_lifetime * particle.rp_animation.p_scaleSpeed) * 0.5f + 1.0f;
+            particle.rp_transform.p_size.x = particle.rp_transform.p_baseSize.x * scaleAmount;
+            particle.rp_transform.p_size.y = particle.rp_transform.p_baseSize.y * scaleAmount;
+            UpdateCenter();
+        }
 
-			// Random speed between 20.0 and 100.0
-			particle.rp_animation.p_movementSpeed = 20.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 80.0f));
-#pragma endregion
+        void UpdateLifetime(float ts) {
+            particle.rp_lifetimeData.p_lifetime += ts;
+        }
 
-#pragma region Particle Lifetime
-			// Random max lifetime between 1.0 and 4.0 seconds
-			particle.rp_lifetimeData.p_lifetime = 0.0f;
-			particle.rp_lifetimeData.p_maxLifetime = 1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 3.0f));
-#pragma endregion
+        void UpdateColor() {
+            if (particle.rp_colorData.p_lerpColor) {
+                LerpColor();
+            }
+            else {
+                FadeColor();
+            }
+        }
 
-#pragma region Particle Color
-			// Random color
-			particle.rp_colorData.p_currColor = ImVec4(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-				static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-				static_cast <float> (rand()) / static_cast <float> (RAND_MAX), 1.0f);
-#pragma endregion
+        bool IsExpired() const {
+            return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
+        }
 
-			return particle;
-		}
+        // Reset the particle (uses original semantics)
+        void Reset(const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+            if (useDefaultParticle && defaultParticle) {
+                particle = CreateFromTemplate(*defaultParticle);
+                particle.rp_lifetimeData.p_lifetime = 0.0f;
+                return;
+            }
 
-		static RectParticle CreateDefaultParticle(ImVec2 view_size, RectParticle& defaultParticle = RectParticle()) {
-			RectParticle trueDefaultParticle;
-			if (IsEqual(defaultParticle, trueDefaultParticle)) {
-				return CreateParticle(ParticleTransform(), ParticleColor(), ParticleLifetime());
-			}
-			else {
-				// Center of Viewport
-				defaultParticle.rp_transform.pt_position.x = view_size.x / 2.0f;
-				defaultParticle.rp_transform.pt_position.y = view_size.y / 2.0f;
-				// Size 10x10
-				defaultParticle.rp_transform.pt_size = ImVec2(10.0f, 10.0f);
-				// No Size Randomization
-				defaultParticle.rp_transform.p_randomSize = false;
-				// No Rotation			
-				defaultParticle.rp_transform.p_randomRotation = false;
+            // Randomized reset
+            particle = CreateRandomInternal(view_size, nullptr);
+            if (!particle.rp_colorData.p_lerpColor) {
+                particle.rp_colorData.p_currColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
+            }
+            else {
+                particle.rp_colorData.p_startColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
+                particle.rp_colorData.p_endColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
+            }
+            particle.rp_lifetimeData.p_lifetime = 0.0f;
+        }
 
-				// Downward Velocity
-				defaultParticle.rp_animation.p_velocity = ImVec2(0.0f, -1.0f);
-				// Moderate Speed			
-				defaultParticle.rp_animation.p_movementSpeed = 50.0f;
-				// Enable Movement
-				defaultParticle.rp_animation.canMove = true;
+        // compute rotated rectangle corners
+        static void CalculateRotatedRectCorners(const RectParticle& particle, ImVec2 outCorners[4]) {
+            ImVec2 center = ImVec2(particle.rp_transform.p_position.x + particle.rp_transform.p_size.x * 0.5f,
+                particle.rp_transform.p_position.y + particle.rp_transform.p_size.y * 0.5f);
+            float hw = particle.rp_transform.p_size.x * 0.5f;
+            float hh = particle.rp_transform.p_size.y * 0.5f;
+            ImVec2 local[4] = {
+                ImVec2(-hw, -hh),
+                ImVec2(hw, -hh),
+                ImVec2(hw, hh),
+                ImVec2(-hw, hh)
+            };
+            float rad = particle.rp_transform.p_rotation.x * (3.14159265358979323846f / 180.0f);
+            float c = cosf(rad);
+            float s = sinf(rad);
+            for (int i = 0; i < 4; ++i) {
+                outCorners[i].x = center.x + local[i].x * c - local[i].y * s;
+                outCorners[i].y = center.y + local[i].x * s + local[i].y * c;
+            }
+        }
 
-				// Start Color Red
-				defaultParticle.rp_colorData.p_startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-				// End Color Yellow
-				defaultParticle.rp_colorData.p_endColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-				// Lerp Color Enabled
-				defaultParticle.rp_colorData.p_lerpColor = true;
-				// Use Alpha Channel
-				defaultParticle.rp_colorData.p_useAlpha = true;
-				// Lifetime 2 Seconds
-				defaultParticle.rp_lifetimeData.p_maxLifetime = 2.0f;
-				// No Lifetime Randomization
-				defaultParticle.rp_lifetimeData.p_randomizeLifetime = false;
-			}
-		}
+        // Expose fade/lerp color result as ImU32 for immediate drawing
+        ImU32 FadeColor() {
+            float lifeRatio = particle.rp_lifetimeData.p_lifetime / std::max(1e-6f, particle.rp_lifetimeData.p_maxLifetime);
+            if (particle.rp_colorData.p_useAlpha) {
+                particle.rp_colorData.p_currColor.w = 1.0f - lifeRatio;
+            }
+            return ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
+        }
 
-		static RectParticle CreateParticle(ParticleTransform p_transform, ParticleColor p_color, ParticleLifetime p_lifetime) {
-			RectParticle particle;
-			particle.rp_transform = p_transform;
-			particle.rp_colorData = p_color;
-			particle.rp_lifetimeData = p_lifetime;
-			return particle;
-		}
+        ImU32 LerpColor() {
+            float lifeRatio = particle.rp_lifetimeData.p_lifetime / std::max(1e-6f, particle.rp_lifetimeData.p_maxLifetime);
+            particle.rp_colorData.p_currColor = ImVec4(
+                particle.rp_colorData.p_startColor.x + (particle.rp_colorData.p_endColor.x - particle.rp_colorData.p_startColor.x) * lifeRatio,
+                particle.rp_colorData.p_startColor.y + (particle.rp_colorData.p_endColor.y - particle.rp_colorData.p_startColor.y) * lifeRatio,
+                particle.rp_colorData.p_startColor.z + (particle.rp_colorData.p_endColor.z - particle.rp_colorData.p_startColor.z) * lifeRatio,
+                particle.rp_colorData.p_useAlpha ? (particle.rp_colorData.p_startColor.w + (particle.rp_colorData.p_endColor.w - particle.rp_colorData.p_startColor.w) * lifeRatio) : 1.0f
+            );
+            return ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
+        }
 
-		static void ResetParticle(RectParticle& particle, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle& defaultParticle = RectParticle()) {
+        // Hit test viewport
+        bool HitViewportBounds(const ImVec2& view_size) const {
+            return (particle.rp_transform.p_position.x < 0.0f ||
+                particle.rp_transform.p_position.x + particle.rp_transform.p_size.x > view_size.x ||
+                particle.rp_transform.p_position.y < 0.0f ||
+                particle.rp_transform.p_position.y + particle.rp_transform.p_size.y > view_size.y);
+        }
 
-			if (useDefaultParticle) {
-				particle = CreateParticle(defaultParticle.rp_transform, defaultParticle.rp_colorData, defaultParticle.rp_lifetimeData);
-				return;
-			}
-			else {
+        // rebound and keep center consistent
+        bool ApplyReboundForce(const ImVec2& view_size) {
+            bool rebounded = false;
+            if (particle.rp_transform.p_position.x < 0.0f) {
+                particle.rp_transform.p_position.x = 0.0f;
+                particle.rp_animation.p_velocity.x = -particle.rp_animation.p_velocity.x;
+                rebounded = true;
+            }
+            else if (particle.rp_transform.p_position.x + particle.rp_transform.p_size.x > view_size.x) {
+                particle.rp_transform.p_position.x = view_size.x - particle.rp_transform.p_size.x;
+                particle.rp_animation.p_velocity.x = -particle.rp_animation.p_velocity.x;
+                rebounded = true;
+            }
+            if (particle.rp_transform.p_position.y < 0.0f) {
+                particle.rp_transform.p_position.y = 0.0f;
+                particle.rp_animation.p_velocity.y = -particle.rp_animation.p_velocity.y;
+                rebounded = true;
+            }
+            else if (particle.rp_transform.p_position.y + particle.rp_transform.p_size.y > view_size.y) {
+                particle.rp_transform.p_position.y = view_size.y - particle.rp_transform.p_size.y;
+                particle.rp_animation.p_velocity.y = -particle.rp_animation.p_velocity.y;
+                rebounded = true;
+            }
+            if (rebounded) UpdateCenter();
+            return rebounded;
+        }
 
-				particle = CreateRandomParticle(view_size);
-				if (!particle.rp_colorData.p_lerpColor) {
-					// set random color
-					particle.rp_colorData.p_currColor = ImVec4(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX), 1.0f);
-				}
-				else {
-					// set random end colors
-					particle.rp_colorData.p_startColor = particle.rp_colorData.p_endColor;
-					particle.rp_colorData.p_endColor = ImVec4(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX), 1.0f);
-				}
-			}
+        // helpers
+        void UpdateCenter() {
+            particle.rp_transform.p_center = ImVec2(particle.rp_transform.p_position.x + particle.rp_transform.p_size.x * 0.5f,
+                particle.rp_transform.p_position.y + particle.rp_transform.p_size.y * 0.5f);
+        }
 
-		}
+        void NormalizeRotation() {
+            while (particle.rp_transform.p_rotation.x >= 360.0f) particle.rp_transform.p_rotation.x -= 360.0f;
+            while (particle.rp_transform.p_rotation.x < 0.0f) particle.rp_transform.p_rotation.x += 360.0f;
+        }
 
-		static bool IsExpired(const RectParticle& particle) {
-			return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
-		}
-
-		static bool IsEqual(RectParticle& p_A, RectParticle& p_B) {
-			return (p_A.rp_transform.pt_position.x == p_B.rp_transform.pt_position.x &&
-				p_A.rp_transform.pt_position.y == p_B.rp_transform.pt_position.y &&
-				p_A.rp_transform.pt_size.x == p_B.rp_transform.pt_size.x &&
-				p_A.rp_transform.pt_size.y == p_B.rp_transform.pt_size.y &&
-				p_A.rp_colorData.p_startColor.x == p_B.rp_colorData.p_startColor.x &&
-				p_A.rp_colorData.p_startColor.y == p_B.rp_colorData.p_startColor.y &&
-				p_A.rp_colorData.p_startColor.z == p_B.rp_colorData.p_startColor.z &&
-				p_A.rp_colorData.p_endColor.x == p_B.rp_colorData.p_endColor.x &&
-				p_A.rp_colorData.p_endColor.y == p_B.rp_colorData.p_endColor.y &&
-				p_A.rp_colorData.p_endColor.z == p_B.rp_colorData.p_endColor.z &&
-				p_A.rp_lifetimeData.p_maxLifetime == p_B.rp_lifetimeData.p_maxLifetime);
-		}
-
-		static void ApplyVelocity(RectParticle& particle, float ts) {
-			particle.rp_transform.pt_position.x += particle.rp_animation.p_velocity.x * ts * particle.rp_animation.p_movementSpeed;
-			particle.rp_transform.pt_position.y += particle.rp_animation.p_velocity.y * ts * particle.rp_animation.p_movementSpeed;
-		}
-
-		static void ApplyRotation(RectParticle& particle, float ts) {
-			particle.rp_animation.p_rotationSpeed += particle.rp_animation.p_rotationSpeed * ts;
-			if (particle.rp_transform.p_rotation.x >= 360.0f) {
-				particle.rp_transform.p_rotation.x -= 360.0f;
-			}
-			else if (particle.rp_transform.p_rotation.x < 0.0f) {
-				particle.rp_transform.p_rotation.x += 360.0f;
-			}
-		}
-
-		static void CalculateRotatedRectCorners(RectParticle& particle, ImVec2& out_corners) {
-			// calculate the four corners of the rotated rectangle
-			float rad = particle.rp_transform.p_rotation.x * 3.14159f / 180.0f;
-			float cosA = cos(rad);
-			float sinA = sin(rad);
-			ImVec2 halfSize = ImVec2(particle.rp_transform.pt_size.x / 2.0f, particle.rp_transform.pt_size.y / 2.0f);
-			out_corners = ImVec2(
-				-particle.rp_transform.pt_position.x * cosA - particle.rp_transform.pt_position.y * sinA + halfSize.x,
-				particle.rp_transform.pt_position.x * sinA - particle.rp_transform.pt_position.y * cosA + halfSize.y
+		// Sets the center and offsets position accordingly
+		void SetCenter(const ImVec2& newCenter) {
+			particle.rp_transform.p_center = newCenter;
+			particle.rp_transform.p_position = ImVec2(
+				newCenter.x - particle.rp_transform.p_size.x * 0.5f,
+				newCenter.y - particle.rp_transform.p_size.y * 0.5f
 			);
-			particle.rp_transform.pt_position.x += out_corners.x;
-			particle.rp_transform.pt_position.y += out_corners.y;
 		}
 
-		static void UpdateRotation(RectParticle& particle, float ts) {
-			ApplyRotation(particle, ts);
-			CalculateRotatedRectCorners(particle, particle.rp_transform.pt_position);
-		}
+        // Static convenience creators that the controller uses internally
+        static RectParticle CreateFromTemplate(const RectParticle& t) {
+            RectParticle out = t;
+            out.rp_transform.p_center = ImVec2(out.rp_transform.p_position.x + out.rp_transform.p_size.x * 0.5f,
+                out.rp_transform.p_position.y + out.rp_transform.p_size.y * 0.5f);
+            if (out.rp_transform.p_baseSize.x <= 0.0f || out.rp_transform.p_baseSize.y <= 0.0f)
+                out.rp_transform.p_baseSize = out.rp_transform.p_size;
+            return out;
+        }
 
-		static void UpdateAnimation2D(RectParticle& particle, float ts) {
+        static RectParticle CreateRandomInternal(const ImVec2& view_size, const RectParticle* templateParticle) {
+            RectParticle particle;
+            if (templateParticle) {
+                particle.rp_transform.p_randomSize = templateParticle->rp_transform.p_randomSize;
+                particle.rp_transform.p_randomRotation = templateParticle->rp_transform.p_randomRotation;
+                particle.rp_transform.p_baseSize = templateParticle->rp_transform.p_baseSize;
+                particle.rp_animation = templateParticle->rp_animation;
+                particle.rp_colorData = templateParticle->rp_colorData;
+                particle.rp_lifetimeData = templateParticle->rp_lifetimeData;
+            }
 
-			if (particle.rp_animation.canMove)
-				ApplyVelocity(particle, ts);
+            // position
+            particle.rp_transform.p_position = ImVec2(RandFloat(0.0f, view_size.x), RandFloat(0.0f, view_size.y));
 
+            // random size
+            if (particle.rp_transform.p_randomSize) {
+                float sx = RandFloat(5.0f, 20.0f);
+                float sy = RandFloat(5.0f, 20.0f);
+                particle.rp_transform.p_baseSize = ImVec2(sx, sy);
+                particle.rp_transform.p_size = particle.rp_transform.p_baseSize;
+            }
+            else {
+                if (particle.rp_transform.p_baseSize.x <= 0.0f || particle.rp_transform.p_baseSize.y <= 0.0f)
+                    particle.rp_transform.p_baseSize = ImVec2(10.0f, 10.0f);
+                particle.rp_transform.p_size = particle.rp_transform.p_baseSize;
+            }
 
-			//if (particle.rp_animation.canRotate)
-			//	ApplyRotation(particle, ts);
+            // rotation
+            if (particle.rp_transform.p_randomRotation) {
+                particle.rp_transform.p_rotation.x = RandFloat(0.0f, 360.0f);
+            }
+            else {
+                particle.rp_transform.p_rotation.x = 0.0f;
+            }
 
+            // center
+            particle.rp_transform.p_center = ImVec2(
+                particle.rp_transform.p_position.x + particle.rp_transform.p_size.x * 0.5f,
+                particle.rp_transform.p_position.y + particle.rp_transform.p_size.y * 0.5f
+            );
 
-			if (particle.rp_animation.canScale) {
-				// Implement scaling logic if needed
-			}
-		}
+            // velocity direction
+            float angle = RandFloat(0.0f, 2.0f * 3.14159265358979323846f);
+            particle.rp_animation.p_velocity = ImVec2(cosf(angle), sinf(angle));
+            particle.rp_animation.p_movementSpeed = RandFloat(20.0f, 100.0f);
+            particle.rp_animation.p_rotationSpeed = RandFloat(-90.0f, 90.0f);
 
-		static void UpdateLifetime(RectParticle& particle, float ts) {
-			particle.rp_lifetimeData.p_lifetime += ts;
-		}
+            // lifetime
+            particle.rp_lifetimeData.p_lifetime = 0.0f;
+            if (!particle.rp_lifetimeData.p_randomizeLifetime && particle.rp_lifetimeData.p_maxLifetime <= 0.0f) {
+                particle.rp_lifetimeData.p_maxLifetime = RandFloat(1.0f, 4.0f);
+            }
+            else if (particle.rp_lifetimeData.p_randomizeLifetime) {
+                particle.rp_lifetimeData.p_maxLifetime = RandFloat(0.5f, 4.0f);
+            }
 
-		static ImU32 FadeColor(RectParticle& particle) {
-			float lifeRatio = particle.rp_lifetimeData.p_lifetime / particle.rp_lifetimeData.p_maxLifetime;
-			particle.rp_colorData.p_currColor.w = 1.0f - lifeRatio; // Fade out based on lifetime
-			return ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
-		}
+            // color
+            if (particle.rp_colorData.p_randomizeColor) {
+                particle.rp_colorData.p_currColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
+            }
+            else {
+                if (particle.rp_colorData.p_lerpColor) {
+                    particle.rp_colorData.p_startColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), particle.rp_colorData.p_startColor.w);
+                    particle.rp_colorData.p_endColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), particle.rp_colorData.p_endColor.w);
+                }
+                else {
+                    particle.rp_colorData.p_currColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
+                }
+            }
 
-		static ImU32 LerpColor(RectParticle& particle) {
-			float lifeRatio = particle.rp_lifetimeData.p_lifetime / particle.rp_lifetimeData.p_maxLifetime;
-			particle.rp_colorData.p_currColor = ImVec4(
-				particle.rp_colorData.p_startColor.x + (particle.rp_colorData.p_endColor.x - particle.rp_colorData.p_startColor.x) * lifeRatio,
-				particle.rp_colorData.p_startColor.y + (particle.rp_colorData.p_endColor.y - particle.rp_colorData.p_startColor.y) * lifeRatio,
-				particle.rp_colorData.p_startColor.z + (particle.rp_colorData.p_endColor.z - particle.rp_colorData.p_startColor.z) * lifeRatio,
-				1.0f);
-			return ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
-		}
+            return particle;
+        }
 
-		static void UpdateColor(RectParticle& particle) {
-			if (particle.rp_colorData.p_lerpColor) {
-				LerpColor(particle);
-			}
-			else {
-				FadeColor(particle);
-			}
-		}
-
-		static bool HitViewportBounds(const RectParticle& particle, const ImVec2& view_size) {
-			return (particle.rp_transform.pt_position.x < 0 || particle.rp_transform.pt_position.x > view_size.x ||
-				particle.rp_transform.pt_position.y < 0 || particle.rp_transform.pt_position.y > view_size.y);
-		}
-
-		static bool ApplyReboundForce(RectParticle& particle, const ImVec2& view_size) {
-			bool rebounded = false;
-			if (particle.rp_transform.pt_position.x < 0 || particle.rp_transform.pt_position.x > view_size.x) {
-				particle.rp_animation.p_velocity.x = -particle.rp_animation.p_velocity.x;
-				rebounded = true;
-			}
-			if (particle.rp_transform.pt_position.y < 0 || particle.rp_transform.pt_position.y > view_size.y) {
-				particle.rp_animation.p_velocity.y = -particle.rp_animation.p_velocity.y;
-				rebounded = true;
-			}
-			return rebounded;
-		}
-
-		static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle& defaultParticle = RectParticle()) {
-			if (IsExpired(particle)) {
-				ResetParticle(particle, view_size, useDefaultParticle, defaultParticle);
-			}
-			if (HitViewportBounds(particle, view_size)) {
-				ApplyReboundForce(particle, view_size);
-			}
-
-			ApplyVelocity(particle, ts);
-			UpdateRotation(particle, ts);
-			UpdateAnimation2D(particle, ts);
-
-			UpdateLifetime(particle, ts);
-			UpdateColor(particle);
-		}
-
-		static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
-			ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
-			draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.pt_position.x, view_pos.y + particle.rp_transform.pt_position.y),
-				ImVec2(view_pos.x + particle.rp_transform.pt_position.x + particle.rp_transform.pt_size.x, view_pos.y + particle.rp_transform.pt_position.y + particle.rp_transform.pt_size.y),
-				color);
-		}
-
-		static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos, const ImU32& override_color) {
-			draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.pt_position.x, view_pos.y + particle.rp_transform.pt_position.y),
-				ImVec2(view_pos.x + particle.rp_transform.pt_position.x + particle.rp_transform.pt_size.x, view_pos.y + particle.rp_transform.pt_position.y + particle.rp_transform.pt_size.y),
-				override_color);
-		}
-
-		static void DrawRotatingParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
-			ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
-			// calculate the four corners of the rotated rectangle
-			float rad = particle.rp_transform.p_rotation.x * (3.14159f / 180.0f) * particle.rp_animation.p_rotationSpeed;
-			float cosA = cos(rad);
-			float sinA = sin(rad);
-			ImVec2 halfSize = ImVec2(particle.rp_transform.pt_size.x / 2.0f, particle.rp_transform.pt_size.y / 2.0f);
-			ImVec2 corners[4];
-			corners[0] = ImVec2(-halfSize.x * cosA - -halfSize.y * sinA, -halfSize.x * sinA + -halfSize.y * cosA); // Top-left
-			corners[1] = ImVec2(halfSize.x * cosA - -halfSize.y * sinA, halfSize.x * sinA + -halfSize.y * cosA);   // Top-right
-			corners[2] = ImVec2(halfSize.x * cosA - halfSize.y * sinA, halfSize.x * sinA + halfSize.y * cosA);     // Bottom-right
-			corners[3] = ImVec2(-halfSize.x * cosA - halfSize.y * sinA, -halfSize.x * sinA + halfSize.y * cosA);   // Bottom-left
-			for (int i = 0; i < 4; ++i) {
-				corners[i].x += view_pos.x + particle.rp_transform.pt_position.x + halfSize.x;
-				corners[i].y += view_pos.y + particle.rp_transform.pt_position.y + halfSize.y;
-			}
-			draw_list->AddConvexPolyFilled(corners, 4, color);
-		}
-
-		// Sort particles by lifetime (ascending)
-		static void SortParticlesByLifetime(std::vector<RectParticle>& particles) {
-			std::sort(particles.begin(), particles.end(),
-				[](const RectParticle& a, const RectParticle& b) {
-					return a.rp_lifetimeData.p_lifetime < b.rp_lifetimeData.p_lifetime;
-				});
-		}
-
-		static void ClampParticleCount(std::vector<RectParticle>& particles, int maxCount, const ImVec2& view_size) {
-			while (particles.size() > maxCount) {
-				particles.pop_back();
-			}
-		}
-
-		static void RestrictParticles(std::vector<RectParticle>& particles, int maxCount, const ImVec2& view_size) {
-			SortParticlesByLifetime(particles);
-			ClampParticleCount(particles, maxCount, view_size);
-		}
-
-		static bool IsDefaultParticle(const RectParticle& particle) {
-			bool default = false;
-			ParticleColor defaultColor;
-			ParticleAnimation2D defaultAnimation;
-			ParticleLifetime defaultLifetime;
-			ParticleTransform defaultTransform;
-
-			/// Transform checks
-			if (particle.rp_transform.pt_position.x == defaultTransform.pt_position.x &&
-				particle.rp_transform.pt_position.y == defaultTransform.pt_position.y &&
-				particle.rp_transform.pt_size.x == defaultTransform.pt_size.x &&
-				particle.rp_transform.pt_size.y == defaultTransform.pt_size.y) {
-				default = true;
-			}
-			/// Animation checks
-			if (particle.rp_animation.p_velocity.x == defaultAnimation.p_velocity.x &&
-				particle.rp_animation.p_velocity.y == defaultAnimation.p_velocity.y &&
-				particle.rp_animation.p_movementSpeed == defaultAnimation.p_movementSpeed) {
-				default = true;
-			}
-			/// Color checks
-			if (particle.rp_colorData.p_currColor.x == defaultColor.p_currColor.x &&
-				particle.rp_colorData.p_currColor.y == defaultColor.p_currColor.y &&
-				particle.rp_colorData.p_currColor.z == defaultColor.p_currColor.z &&
-				particle.rp_colorData.p_currColor.w == defaultColor.p_currColor.w) {
-				default = true;
-			}
-			/// Lifetime checks
-			if (particle.rp_lifetimeData.p_lifetime == defaultLifetime.p_lifetime &&
-				particle.rp_lifetimeData.p_maxLifetime == defaultLifetime.p_maxLifetime) {
-				default = true;
-			}
-			return default;
-		}
+    private:
+        RectParticle& particle;
+    };
 
 
-	} RectParticleUtils;
+    static class RectParticleUtils {
+    public:
+        // --- Creation API
+        // New: large "full" entry point with many parameters for creation
+        static RectParticle CreateParticleFull(
+            const ImVec2& view_size,
+            const ImVec2& position,
+            const ImVec2& size,
+            const ImVec2& baseSize,
+            bool randomSize,
+            bool randomRotation,
+            const ImVec2& velocity,
+            float movementSpeed,
+            float rotationSpeed,
+            float scaleSpeed,
+            bool canMove,
+            bool canRotate,
+            bool canScale,
+            const ImVec4& startColor,
+            const ImVec4& endColor,
+            const ImVec4& currColor,
+            bool lerpColor,
+            bool fadeColor,
+            bool useAlpha,
+            bool randomizeColor,
+            float lifetime,
+            float maxLifetime,
+            bool randomizeLifetime,
+            bool loopLifetime)
+        {
+            RectParticle p;
+            p.rp_transform.p_position = position;
+            p.rp_transform.p_size = size;
+            p.rp_transform.p_baseSize = (baseSize.x > 0.0f && baseSize.y > 0.0f) ? baseSize : size;
+            p.rp_transform.p_randomSize = randomSize;
+            p.rp_transform.p_randomRotation = randomRotation;
+            p.rp_animation.p_velocity = velocity;
+            p.rp_animation.p_movementSpeed = movementSpeed;
+            p.rp_animation.p_rotationSpeed = rotationSpeed;
+            p.rp_animation.p_scaleSpeed = scaleSpeed;
+            p.rp_animation.canMove = canMove;
+            p.rp_animation.canRotate = canRotate;
+            p.rp_animation.canScale = canScale;
+            p.rp_colorData.p_startColor = startColor;
+            p.rp_colorData.p_endColor = endColor;
+            p.rp_colorData.p_currColor = currColor;
+            p.rp_colorData.p_lerpColor = lerpColor;
+            p.rp_colorData.p_fadeColor = fadeColor;
+            p.rp_colorData.p_useAlpha = useAlpha;
+            p.rp_colorData.p_randomizeColor = randomizeColor;
+            p.rp_lifetimeData.p_lifetime = lifetime;
+            p.rp_lifetimeData.p_maxLifetime = maxLifetime;
+            p.rp_lifetimeData.p_randomizeLifetime = randomizeLifetime;
+            p.rp_lifetimeData.p_loop = loopLifetime;
+
+            p.rp_transform.p_center = ImVec2(p.rp_transform.p_position.x + p.rp_transform.p_size.x * 0.5f,
+                p.rp_transform.p_position.y + p.rp_transform.p_size.y * 0.5f);
+
+            return p;
+        }
+
+        // Existing convenience functions retained, now delegating to CreateParticleFull or controller helpers
+
+        static RectParticle CreateRandomParticle(const ImVec2& view_size,
+            const ImVec2& position = ImVec2(0.0f, 0.0f),
+            const RectParticle* templateParticle = nullptr)
+        {
+            // If caller supplied a position use it; otherwise CreateRandomInternal will pick a random position
+            if (position.x != 0.0f || position.y != 0.0f) {
+                RectParticle p = RectParticleController::CreateRandomInternal(view_size, templateParticle);
+                p.rp_transform.p_position = position;
+                p.rp_transform.p_center = ImVec2(position.x + p.rp_transform.p_size.x * 0.5f, position.y + p.rp_transform.p_size.y * 0.5f);
+                return p;
+            }
+            else {
+                return RectParticleController::CreateRandomInternal(view_size, templateParticle);
+            }
+        }
+
+        static RectParticle CreateDefaultParticle(const ImVec2& view_size, const RectParticle* defaultParticle = nullptr) {
+            if (defaultParticle) {
+                return RectParticleController::CreateFromTemplate(*defaultParticle);
+            }
+            else {
+                RectParticle out;
+                out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
+                out.rp_transform.p_size = ImVec2(10.0f, 10.0f);
+                out.rp_transform.p_baseSize = out.rp_transform.p_size;
+                out.rp_transform.p_randomSize = false;
+                out.rp_transform.p_randomRotation = false;
+                out.rp_animation.p_velocity = ImVec2(0.0f, -1.0f);
+                out.rp_animation.p_movementSpeed = 50.0f;
+                out.rp_animation.canMove = true;
+                out.rp_colorData.p_startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+                out.rp_colorData.p_endColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+                out.rp_colorData.p_lerpColor = true;
+                out.rp_colorData.p_useAlpha = true;
+                out.rp_lifetimeData.p_maxLifetime = 2.0f;
+                out.rp_lifetimeData.p_randomizeLifetime = false;
+                out.rp_transform.p_center = ImVec2(out.rp_transform.p_position.x + out.rp_transform.p_size.x * 0.5f,
+                    out.rp_transform.p_position.y + out.rp_transform.p_size.y * 0.5f);
+                return out;
+            }
+        }
+
+        static RectParticle CreateParticle(const ParticleTransform& p_transform, const ParticleColor& p_color, const ParticleLifetime& p_lifetime) {
+            RectParticle particle;
+            particle.rp_transform = p_transform;
+            if (particle.rp_transform.p_baseSize.x <= 0.0f || particle.rp_transform.p_baseSize.y <= 0.0f)
+                particle.rp_transform.p_baseSize = particle.rp_transform.p_size;
+            particle.rp_colorData = p_color;
+            particle.rp_lifetimeData = p_lifetime;
+            particle.rp_transform.p_center = ImVec2(p_transform.p_position.x + p_transform.p_size.x * 0.5f,
+                p_transform.p_position.y + p_transform.p_size.y * 0.5f);
+            return particle;
+        }
+
+        static void ResetParticle(RectParticle& particle, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+            RectParticleController controller(particle);
+            controller.Reset(view_size, useDefaultParticle, defaultParticle);
+        }
+
+        static bool IsExpired(const RectParticle& particle) {
+            return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
+        }
+
+        static bool IsEqual(const RectParticle& a, const RectParticle& b) {
+            constexpr float EPS = 1e-6f;
+            auto feq = [&](float x, float y) { return fabsf(x - y) <= EPS; };
+            return feq(a.rp_transform.p_position.x, b.rp_transform.p_position.x) &&
+                feq(a.rp_transform.p_position.y, b.rp_transform.p_position.y) &&
+                feq(a.rp_transform.p_size.x, b.rp_transform.p_size.x) &&
+                feq(a.rp_transform.p_size.y, b.rp_transform.p_size.y) &&
+                feq(a.rp_colorData.p_startColor.x, b.rp_colorData.p_startColor.x) &&
+                feq(a.rp_colorData.p_startColor.y, b.rp_colorData.p_startColor.y) &&
+                feq(a.rp_colorData.p_startColor.z, b.rp_colorData.p_startColor.z) &&
+                feq(a.rp_colorData.p_endColor.x, b.rp_colorData.p_endColor.x) &&
+                feq(a.rp_colorData.p_endColor.y, b.rp_colorData.p_endColor.y) &&
+                feq(a.rp_colorData.p_endColor.z, b.rp_colorData.p_endColor.z) &&
+                feq(a.rp_lifetimeData.p_maxLifetime, b.rp_lifetimeData.p_maxLifetime);
+        }
+
+        // Delegation: apply velocity/rotation/scale via controller
+        static void ApplyVelocity(RectParticle& particle, float ts) {
+            RectParticleController ctrl(particle);
+            ctrl.ApplyVelocity(ts);
+        }
+
+        static void ApplyRotation(RectParticle& particle, float ts) {
+            RectParticleController ctrl(particle);
+            ctrl.ApplyRotation(ts);
+        }
+
+        static void ApplyScale(RectParticle& particle, float ts) {
+            RectParticleController ctrl(particle);
+            ctrl.ApplyScale(ts);
+        }
+
+        static void CalculateRotatedRectCorners(const RectParticle& particle, ImVec2 outCorners[4]) {
+            RectParticleController::CalculateRotatedRectCorners(particle, outCorners);
+        }
+
+        static void UpdateRotation(RectParticle& particle, float ts) {
+            if (particle.rp_animation.canRotate) ApplyRotation(particle, ts);
+        }
+
+        static void UpdateAnimation2D(RectParticle& particle, float ts) {
+            RectParticleController ctrl(const_cast<RectParticle&>(particle));
+            if (particle.rp_animation.canMove) ctrl.ApplyVelocity(ts);
+            if (particle.rp_animation.canRotate) ctrl.ApplyRotation(ts);
+            if (particle.rp_animation.canScale) ctrl.ApplyScale(ts);
+        }
+
+        static void UpdateLifetime(RectParticle& particle, float ts) {
+            RectParticleController ctrl(particle);
+            ctrl.UpdateLifetime(ts);
+        }
+
+        static ImU32 FadeColor(RectParticle& particle) {
+            RectParticleController ctrl(particle);
+            return ctrl.FadeColor();
+        }
+
+        static ImU32 LerpColor(RectParticle& particle) {
+            RectParticleController ctrl(particle);
+            return ctrl.LerpColor();
+        }
+
+        static void UpdateColor(RectParticle& particle) {
+            RectParticleController ctrl(particle);
+            ctrl.UpdateColor();
+        }
+
+        static bool HitViewportBounds(const RectParticle& particle, const ImVec2& view_size) {
+            RectParticleController ctrl(const_cast<RectParticle&>(particle));
+            return ctrl.HitViewportBounds(view_size);
+        }
+
+        static bool ApplyReboundForce(RectParticle& particle, const ImVec2& view_size) {
+            RectParticleController ctrl(particle);
+            return ctrl.ApplyReboundForce(view_size);
+        }
+
+        static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+            RectParticleController ctrl(particle);
+            ctrl.Update(ts, view_size, useDefaultParticle, defaultParticle);
+        }
+
+        static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
+            ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
+            draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.p_position.x, view_pos.y + particle.rp_transform.p_position.y),
+                ImVec2(view_pos.x + particle.rp_transform.p_position.x + particle.rp_transform.p_size.x, view_pos.y + particle.rp_transform.p_position.y + particle.rp_transform.p_size.y),
+                color);
+        }
+
+        static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos, const ImU32& override_color) {
+            draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.p_position.x, view_pos.y + particle.rp_transform.p_position.y),
+                ImVec2(view_pos.x + particle.rp_transform.p_position.x + particle.rp_transform.p_size.x, view_pos.y + particle.rp_transform.p_position.y + particle.rp_transform.p_size.y),
+                override_color);
+        }
+
+        static void DrawRotatingParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
+            ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
+            ImVec2 corners[4];
+            CalculateRotatedRectCorners(particle, corners);
+            for (int i = 0; i < 4; ++i) {
+                corners[i].x += view_pos.x;
+                corners[i].y += view_pos.y;
+            }
+            draw_list->AddConvexPolyFilled(corners, 4, color);
+        }
+
+        // Sorting/clamping helpers unchanged
+        static void SortParticlesByLifetime(std::vector<RectParticle>& particles) {
+            std::sort(particles.begin(), particles.end(),
+                [](const RectParticle& a, const RectParticle& b) {
+                    return a.rp_lifetimeData.p_lifetime < b.rp_lifetimeData.p_lifetime;
+                });
+        }
+
+        static void ClampParticleCount(std::vector<RectParticle>& particles, int maxCount, const ImVec2& /*view_size*/) {
+            while ((int)particles.size() > maxCount) {
+                particles.pop_back();
+            }
+        }
+
+        static void RestrictParticles(std::vector<RectParticle>& particles, int maxCount, const ImVec2& view_size) {
+            SortParticlesByLifetime(particles);
+            ClampParticleCount(particles, maxCount, view_size);
+        }
+
+        static bool IsDefaultParticle(const RectParticle& particle) {
+            ParticleColor defaultColor;
+            ParticleAnimation2D defaultAnimation;
+            ParticleLifetime defaultLifetime;
+            ParticleTransform defaultTransform;
+
+            auto feq = [](float a, float b) { return fabsf(a - b) <= 1e-6f; };
+
+            bool transformDefault = feq(particle.rp_transform.p_position.x, defaultTransform.p_position.x) &&
+                feq(particle.rp_transform.p_position.y, defaultTransform.p_position.y) &&
+                feq(particle.rp_transform.p_size.x, defaultTransform.p_size.x) &&
+                feq(particle.rp_transform.p_size.y, defaultTransform.p_size.y);
+
+            bool animDefault = feq(particle.rp_animation.p_velocity.x, defaultAnimation.p_velocity.x) &&
+                feq(particle.rp_animation.p_velocity.y, defaultAnimation.p_velocity.y) &&
+                feq(particle.rp_animation.p_movementSpeed, defaultAnimation.p_movementSpeed);
+
+            bool colorDefault = feq(particle.rp_colorData.p_currColor.x, defaultColor.p_currColor.x) &&
+                feq(particle.rp_colorData.p_currColor.y, defaultColor.p_currColor.y) &&
+                feq(particle.rp_colorData.p_currColor.z, defaultColor.p_currColor.z) &&
+                feq(particle.rp_colorData.p_currColor.w, defaultColor.p_currColor.w);
+
+            bool lifetimeDefault = feq(particle.rp_lifetimeData.p_lifetime, defaultLifetime.p_lifetime) &&
+                feq(particle.rp_lifetimeData.p_maxLifetime, defaultLifetime.p_maxLifetime);
+
+            return transformDefault && animDefault && colorDefault && lifetimeDefault;
+        }
+
+    } RectParticleUtils;
+
+    struct RectParticleCache {
+        ImVec2 cachedCenter = ImVec2(0.0f, 0.0f);
+        ImVec2 cachedCorners[4];    // rotated rect corners
+        ImU32  cachedColor = 0;     // current display color (as U32)
+        float  cachedLifetimeRatio = 0.0f;
+        bool   isExpired = false;
+
+        void UpdateFromParticle(const RectParticle& particle) {
+            // Lifetime ratio
+            cachedLifetimeRatio = particle.rp_lifetimeData.p_maxLifetime > 0.0f ?
+                particle.rp_lifetimeData.p_lifetime / particle.rp_lifetimeData.p_maxLifetime : 0.0f;
+            cachedLifetimeRatio = std::clamp(cachedLifetimeRatio, 0.0f, 1.0f);
+
+            // Expiration
+            isExpired = particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
+
+            // Center
+            cachedCenter = ImVec2(
+                particle.rp_transform.p_position.x + particle.rp_transform.p_size.x * 0.5f,
+                particle.rp_transform.p_position.y + particle.rp_transform.p_size.y * 0.5f
+            );
+
+            // Color (already updated in utils update)
+            cachedColor = ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
+
+            // Rotated corners
+            RectParticleUtils::CalculateRotatedRectCorners(particle, cachedCorners);
+        }
+    };
 
 	struct BackgroundParticle {
 		ParticleColor bg_colorData;
@@ -454,350 +653,114 @@ namespace Particles {
 
 	};
 
-
-	class IMGUI_2D_PARTICLE_LAYER : public Walnut::Layer
-	{
-	public:
-		ImDrawList* draw_list;
-		ImVec2 view_pos;
-		ImVec2 view_size;
-		ImVec2 min_view_size = ImVec2(200, 200);
-		ImVec2 mouse_pos;
-		std::vector<RectParticle> particles;
-		const int defaultParticleCount = 100;
-		const int maxParticleCount = 300;
-
-		bool is_hovered = false;
-		int hoverBurstCount = 25;
-		float hoverBurstInterval = 0.025f;
-		float hoverBurstTimer = 0.0f;
-
-		RectParticle defaultParticle;
-		BackgroundParticle bg_particle;
-		bool useDefaultParticle = false;
-
-		void HandleHoverBurst(float ts)
-		{
-			if (is_hovered) {
-				hoverBurstTimer += ts;
-				if (hoverBurstTimer >= hoverBurstInterval) {
-					hoverBurstTimer = 0.0f;
-					// Create burst particles at mouse position withing viewport 
-					for (int i = 0; i < hoverBurstCount; ++i) {
-						particles.push_back(RectParticleUtils::CreateRandomParticle(view_size, mouse_pos));
-					}
-				}
-			}
-		}
-
-		virtual void OnUIRender() override
-		{
-
-			if (ImGui::Begin("2D Particle Layer")) {
-
-				draw_list = ImGui::GetWindowDrawList();
-				view_pos = ImGui::GetCursorScreenPos();
-				view_size = ImGui::GetContentRegionAvail();
-				if (view_size.x < min_view_size.x) view_size.x = min_view_size.x;
-				if (view_size.y < min_view_size.y) view_size.y = min_view_size.y;
-				ImGui::InvisibleButton("viewport", view_size);
-				if (ImGui::IsItemHovered()) {
-					is_hovered = true;
-					mouse_pos = ImVec2(ImGui::GetIO().MousePos.x - view_pos.x, ImGui::GetIO().MousePos.y - view_pos.y);
-				}
-				else {
-					is_hovered = false;
-				}
-
-
-				/// Background particle
-				if (bg_particle.bg_lifetimeData.p_lifetime >= bg_particle.bg_lifetimeData.p_maxLifetime) {
-					bg_particle.bg_lifetimeData.p_lifetime = 0.0f;
-					bg_particle.bg_lifetimeData.p_maxLifetime = 5.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 5.0f));
-
-					bg_particle.bg_colorData.p_startColor = bg_particle.bg_colorData.p_endColor;
-					bg_particle.bg_colorData.p_endColor = ImVec4(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX), 1.0f);
-				}
-				ImU32 bg_color = ImGui::GetColorU32(bg_particle.bg_colorData.p_currColor);
-				draw_list->AddRectFilled(view_pos, ImVec2(view_pos.x + view_size.x, view_pos.y + view_size.y), bg_color);
-
-
-
-				/// Basic particles
-				if (particles.empty()) {
-
-					if (useDefaultParticle) {
-						for (int i = 0; i < defaultParticleCount; ++i) {
-							particles.push_back(RectParticleUtils::CreateParticle(
-								defaultParticle.rp_transform,
-								defaultParticle.rp_colorData,
-								defaultParticle.rp_lifetimeData
-							));
-						}
-					}
-					else
-					{
-						for (int i = 0; i < defaultParticleCount; ++i) {
-							particles.push_back(RectParticleUtils::CreateRandomParticle(view_size));
-						}
-					}
-
-				}
-				for (const auto& particle : particles) {
-
-					if (particle.rp_animation.canRotate)
-					{
-						RectParticleUtils::DrawRotatingParticle(draw_list, particle, view_pos);
-					}
-					else
-					{
-						RectParticleUtils::DrawParticle(draw_list, particle, view_pos);
-					}
-
-				}
-				RectParticleUtils::RestrictParticles(particles, maxParticleCount, view_size);
-			}
-
-			ImGui::End();
-		}
-
-		virtual void OnUpdate(float ts) override
-		{
-			// Update code for the viewport would go here
-			for (auto& particle : particles) {
-				RectParticleUtils::UpdateParticle(particle, ts, view_size, useDefaultParticle, defaultParticle);
-			}
-
-			// update background particle lifetime
-			bg_particle.bg_lifetimeData.p_lifetime += ts;
-			// Lerp current color from start color to end color based on lifetime
-			float bg_lifeRatio = bg_particle.bg_lifetimeData.p_lifetime / bg_particle.bg_lifetimeData.p_maxLifetime;
-			bg_particle.bg_colorData.p_currColor = ImVec4(
-				bg_particle.bg_colorData.p_startColor.x + (bg_particle.bg_colorData.p_endColor.x - bg_particle.bg_colorData.p_startColor.x) * bg_lifeRatio,
-				bg_particle.bg_colorData.p_startColor.y + (bg_particle.bg_colorData.p_endColor.y - bg_particle.bg_colorData.p_startColor.y) * bg_lifeRatio,
-				bg_particle.bg_colorData.p_startColor.z + (bg_particle.bg_colorData.p_endColor.z - bg_particle.bg_colorData.p_startColor.z) * bg_lifeRatio,
-				1.0f);
-
-			HandleHoverBurst(ts);
-		}
+	enum EmissionMode {
+		EMIT_CONTINUOUS_DEFAULT,
+		EMIT_CONTINUOUS_RANDOM,
+		EMIT_BURST_DEFUALT,
+		EMIT_BURST_RANDOM
 	};
 
-	class IMGUI_2D_PARTICLE_LAYER_PROPERTIES : public Walnut::Layer
-	{
-	public:
-		float sliderSpeed = 1.0f;
-		int defaultParticleCount = 100;
-		int maxParticleCount = 300;
-		bool is_hovered = false;
-		int hoverBurstCount = 25;
-		float hoverBurstInterval = 0.025f;
-		float hoverBurstTimer = 0.0f;
+    struct ParticleSystem {
+        Particles::RectParticle emitterParticle;
+        Particles::RectParticle spawnParticle;
+        std::vector<Particles::RectParticle> activeParticles;
+        std::vector<RectParticleCache> particleCache;
 
-		RectParticle defaultParticle;
-		BackgroundParticle defaultBackground;
-		bool useDefaultParticle = false;
+        // exterior position array
+		float s_position[2] = { 0.0f, 0.0f };
 
-		IMGUI_2D_PARTICLE_LAYER p_layer;
-		bool is_active = false;
+        // Emitter configuration
+        ImVec2 viewSize = ImVec2(800.0f, 600.0f);
+        int maxParticles = 200;
+        bool useDefaultParticle = false;
+        float emissionRate = 10.0f; // particles per second
+        float emissionAccumulator = 0.0f; // internal timing accumulator
+    };
 
-		void SetupDefaultParticle() {
-			// Center of Viewport
-			defaultParticle.rp_transform.pt_position = ImVec2(p_layer.view_size.x / 2.0f, p_layer.view_size.y / 2.0f);
-			// Size 10x10
-			defaultParticle.rp_transform.pt_size = ImVec2(10.0f, 10.0f);
-			// No Size Randomization
-			defaultParticle.rp_transform.p_randomSize = false;
-			// No Rotation			
-			defaultParticle.rp_transform.p_randomRotation = false;
+    class RectParticleEmitter {
+    public:
+        ParticleSystem system;
+		EmissionMode emissionMode = EMIT_BURST_DEFUALT;
 
-			// Downward Velocity
-			defaultParticle.rp_animation.p_velocity = ImVec2(0.0f, -1.0f);
-			// Moderate Speed			
-			defaultParticle.rp_animation.p_movementSpeed = 50.0f;
-			// Enable Movement
-			defaultParticle.rp_animation.canMove = true;
+        RectParticleEmitter(const ImVec2& viewSize = ImVec2(800, 600),
+            const RectParticle* emitterParticle = nullptr,
+            const RectParticle* spawnParticle = nullptr)
+        {
+            system.viewSize = viewSize;
+            if (emitterParticle)
+                system.emitterParticle = *emitterParticle;
+            if (spawnParticle)
+                system.spawnParticle = *spawnParticle;
+        }
 
-			// Start Color Red
-			defaultParticle.rp_colorData.p_startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-			// End Color Yellow
-			defaultParticle.rp_colorData.p_endColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-			// Lerp Color Enabled
-			defaultParticle.rp_colorData.p_lerpColor = true;
-			// Use Alpha Channel
-			defaultParticle.rp_colorData.p_useAlpha = true;
-			// Lifetime 2 Seconds
-			defaultParticle.rp_lifetimeData.p_maxLifetime = 2.0f;
-			// No Lifetime Randomization
-			defaultParticle.rp_lifetimeData.p_randomizeLifetime = false;
+        void SetPosition(const ImVec2& viewSize, const ImVec2& pos) {
+            system.viewSize = viewSize;
+            system.emitterParticle.rp_transform.p_position = pos;
+            system.spawnParticle.rp_transform.p_position = pos;
+        }
+
+		void SetEmissionMode(EmissionMode mode) {
+			emissionMode = mode;
 		}
 
-		virtual void OnAttach() override {
-			SetupDefaultParticle();
-			p_layer.defaultParticle = defaultParticle;
-			p_layer.useDefaultParticle = useDefaultParticle;
-		}
+        void Update(float dt, const ImVec2& viewSize, const ImVec2& pos) {
+            //SetPosition(viewSize, pos);
+            system.viewSize = viewSize;
+            Emit(dt);
+            for (auto& p : system.activeParticles)
+                RectParticleUtils::UpdateParticle(p, dt, viewSize, false, &system.spawnParticle);
+            RectParticleUtils::RestrictParticles(system.activeParticles, system.maxParticles, viewSize);
+        }
 
-		virtual void OnUIRender() override {
-			p_layer.defaultParticle = defaultParticle;
-			p_layer.useDefaultParticle = useDefaultParticle;
-			p_layer.OnUIRender();
+        void Draw(ImDrawList* drawList, const ImVec2& viewPos) {
+            for (const auto& p : system.activeParticles)
+                RectParticleUtils::DrawParticle(drawList, p, viewPos);
+        }
 
-			ImGui::Begin("2D Particle Details");
-			ImVec2 max = ImVec2(ImGui::GetWindowContentRegionMax().x * 2.0f, ImGui::GetWindowContentRegionMax().y * 2.0f);
-			ImVec2 min = ImGui::GetWindowPos();
-			ImVec2 propMax = ImVec2(min.x + max.x, min.y + max.y);
-			is_active = ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), max);
-			if (is_active)
-			{
-
-
-			}
-
-
-			// set min size from properties window to fit default particle controls
-			ImVec2 propMin = ImVec2();
-			// get the length of all checkbox labels
-			propMin = ImGui::CalcTextSize("Random Size Random Rotation Use Default Particle", nullptr, true, 0.0f);
-
-
-			// make sure the default particle tree is always minimum size to fit all controls
-			ImGui::SetNextItemWidth(propMin.x + 50.0f);
-			if (ImGui::TreeNode("Default Particle"))
-			{
-
-				if (is_active) {
-
-					if (ImGui::Checkbox("Random Size", &defaultParticle.rp_transform.p_randomSize)) {
-						p_layer.defaultParticle.rp_transform.p_randomSize = defaultParticle.rp_transform.p_randomSize;
-					}
-					ImGui::SameLine();
-					if (ImGui::Checkbox("Random Rotation", &defaultParticle.rp_transform.p_randomRotation)) {
-						p_layer.defaultParticle.rp_transform.p_randomRotation = defaultParticle.rp_transform.p_randomRotation;
-					}
-					ImGui::SameLine();
-					if (ImGui::Checkbox("Use Default Particle", &useDefaultParticle)) {
-						p_layer.useDefaultParticle = useDefaultParticle;
-						SetupDefaultParticle();
-					}
-					ImGui::Separator();
-					if (ImGui::Button("Reset to Default Values")) {
-						SetupDefaultParticle();
-					}
-					ImGui::SameLine();
-					if (ImGui::Button("Clear Values")) {
-						defaultParticle = RectParticle();
-					}
-					ImGui::Separator();
-					if (ImGui::Button("Save As Default")) {
-						defaultParticle = p_layer.defaultParticle;
-					}
-					ImGui::SameLine();
-					if (ImGui::Button("Center Particle")) {
-						defaultParticle.rp_transform.pt_position = ImVec2(p_layer.view_size.x / 2.0f, p_layer.view_size.y / 2.0f);
-					}
-					ImGui::SameLine();
-					if (ImGui::Button("Random Values")) {
-						defaultParticle = RectParticleUtils::CreateRandomParticle(p_layer.view_size);
-					}
+        void Emit(float dt) {
+            system.emissionAccumulator += dt * system.emissionRate;
+            while (system.emissionAccumulator >= 1.0f &&
+                (int)system.activeParticles.size() < system.maxParticles)
+            {
+				switch (emissionMode) {
+				case EMIT_CONTINUOUS_DEFAULT:
+                    system.activeParticles.push_back(RectParticleUtils::CreateDefaultParticle(
+						system.viewSize, &system.spawnParticle));
+					break;
+				case EMIT_CONTINUOUS_RANDOM:
+					system.activeParticles.push_back(
+						RectParticleUtils::CreateRandomParticle(system.viewSize,
+							system.emitterParticle.rp_transform.p_position,
+							&system.spawnParticle));
+                    break;
+				case EMIT_BURST_DEFUALT:
+					system.activeParticles.push_back(RectParticleUtils::CreateDefaultParticle(
+						system.viewSize, &system.spawnParticle));
+					break;
+				case EMIT_BURST_RANDOM:
+					system.activeParticles.push_back(
+						RectParticleUtils::CreateRandomParticle(system.viewSize,
+							system.emitterParticle.rp_transform.p_position,
+							&system.spawnParticle));
+					break;
 				}
+                system.emissionAccumulator -= 1.0f;
+            }
+        }
 
-				if (ImGui::TreeNode("Particle Transform"))
-				{
-					if (is_active) {
+        void Reset(const ImVec2& viewSize = ImVec2(800, 600),
+            const RectParticle* emitterParticle = nullptr,
+            const RectParticle* spawnParticle = nullptr)
+        {
+			system.viewSize = viewSize;
+			system.activeParticles.clear();
+			system.emissionAccumulator = 0.0f;
+			if (emitterParticle)
+				system.emitterParticle = *emitterParticle;
+			if (spawnParticle)
+				system.spawnParticle = *spawnParticle;
+        }
+    };
 
-					}
-					ImGui::DragFloat("Position X", &defaultParticle.rp_transform.pt_position.x, sliderSpeed, 0.0f, p_layer.view_size.x);
-					ImGui::DragFloat("Position Y", &defaultParticle.rp_transform.pt_position.y, sliderSpeed, 0.0f, p_layer.view_size.y);
-					ImGui::Separator();
-					ImGui::DragFloat("Size X", &defaultParticle.rp_transform.pt_size.x, sliderSpeed, 1.0f, p_layer.view_size.x);
-					ImGui::DragFloat("Size Y", &defaultParticle.rp_transform.pt_size.y, sliderSpeed, 1.0f, p_layer.view_size.y);
-					ImGui::Separator();
-					ImGui::DragFloat("Rotation", &defaultParticle.rp_transform.p_rotation.x, sliderSpeed, 0.0f, 360.0f);
-
-
-					ImGui::Separator();
-					ImGui::TreePop();
-					ImGui::Spacing();
-				}
-
-				if (ImGui::TreeNode("Particle Animation"))
-				{
-					if (is_active) {
-						ImGui::DragFloat2("Velocity", (float*)&defaultParticle.rp_animation.p_velocity, sliderSpeed, -10.0f, 10.0f);
-					}
-
-					ImGui::Separator();
-					ImGui::TreePop();
-					ImGui::Spacing();
-				}
-
-				if (ImGui::TreeNode("Particle Color"))
-				{
-					if (is_active) {
-						ImGui::ColorPicker4("Start Color", (float*)&defaultParticle.rp_colorData.p_startColor);
-						ImGui::ColorPicker4("End Color", (float*)&defaultParticle.rp_colorData.p_endColor);
-					}
-
-					ImGui::Separator();
-					ImGui::TreePop();
-					ImGui::Spacing();
-				}
-
-				if (ImGui::TreeNode("Particle Lifetime"))
-				{
-					if (is_active) {
-						ImGui::DragFloat("Max Lifetime", &defaultParticle.rp_lifetimeData.p_maxLifetime, sliderSpeed, 0.1f, 5.0f);
-					}
-
-					ImGui::Separator();
-					ImGui::TreePop();
-					ImGui::Spacing();
-				}
-
-				ImGui::Separator();
-				ImGui::TreePop();
-				ImGui::Spacing();
-				p_layer.defaultParticle = defaultParticle;
-				p_layer.useDefaultParticle = useDefaultParticle;
-			}
-
-			if (ImGui::TreeNode("Background Particle")) {
-
-
-
-				ImGui::Separator();
-				ImGui::TreePop();
-				ImGui::Spacing();
-			}
-
-			if (ImGui::TreeNode("Bounds")) {
-
-				if (is_active) {
-
-				}
-
-
-				if (ImGui::TreeNode("Bounds Shape"))
-				{
-
-					ImGui::Separator();
-					ImGui::TreePop();
-					ImGui::Spacing();
-				}
-
-				ImGui::TreePop();
-				ImGui::Spacing();
-			}
-			p_layer.defaultParticle = defaultParticle;
-
-			ImGui::End();
-		}
-
-		virtual void OnUpdate(float ts) override {
-			p_layer.OnUpdate(ts);
-		}
-	};
 
 }

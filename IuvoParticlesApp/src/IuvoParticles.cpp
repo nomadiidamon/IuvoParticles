@@ -1,7 +1,7 @@
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Image.h"
-#include "RectParticle.h"
+#include "ParticleSystemLayers.h"
 
 class ExampleLayer : public Walnut::Layer
 {
@@ -423,9 +423,12 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.Height = 1400;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	//app->PushLayer<ExampleLayer>();
-	//app->PushLayer<ParticleLayer>();
-	app->PushLayer<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
+	auto particleLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER>();
+	auto propertiesLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
+	propertiesLayer->SetParticleLayer(particleLayer.get());
+	app->PushLayer(particleLayer);
+	app->PushLayer(propertiesLayer);
+
 	app->SetMenubarCallback([app]()
 		{
 			if (ImGui::BeginMenu("File"))
