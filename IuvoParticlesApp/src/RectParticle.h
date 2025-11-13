@@ -660,6 +660,10 @@ namespace Particles {
 		EMIT_BURST_RANDOM
 	};
 
+    enum class EmitterShape { Point = 0, Circle = 1 };
+    enum class BlendMode { Alpha = 0, Additive = 1, Multiply = 2 };
+
+
     struct ParticleSystem {
         Particles::RectParticle emitterParticle;
         Particles::RectParticle spawnParticle;
@@ -698,6 +702,10 @@ namespace Particles {
             system.emitterParticle.rp_transform.p_position = pos;
             system.spawnParticle.rp_transform.p_position = pos;
         }
+
+		void SetViewportSize(const ImVec2& viewSize) {
+			system.viewSize = viewSize;
+		}
 
 		void SetEmissionMode(EmissionMode mode) {
 			emissionMode = mode;
