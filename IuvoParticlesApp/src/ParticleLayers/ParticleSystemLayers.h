@@ -18,7 +18,7 @@ namespace Particles {
 		ImVec2 lastClickPos = ImVec2(0.0f, 0.0f);
 
 		std::vector<RectParticle> particles;
-		int defaultParticleCount = 1000;
+		int defaultParticleCount = 10000;
 		int maxParticleCount = 100000;
 		int psMaxParticles = 100000;
 
@@ -45,15 +45,9 @@ namespace Particles {
 
 		RectParticle defaultParticle;
 		BackgroundParticle bg_particle;
-		RectParticleEmitter rp_emitter;
 		bool useDefaultParticle = true;
 
 
-		// emitter UI/runtime
-		bool emitterAutoEmit = true;
-		EmitterShape emitterShape = EmitterShape::Circle;
-		float emitterSpawnRadius = 0.3f; // meaningful when circle shape selected
-		int emitterManualEmitCount = 10;
 
 		Walnut::Image* particleTexture = nullptr;
 		std::string particleTexturePath;
@@ -75,26 +69,14 @@ namespace Particles {
 				RectParticle p;
 				if (useDefaultParticle) {
 					p = RectParticleUtils::CreateParticle(
-						rp_emitter.system.spawnParticle.rp_transform,
-						rp_emitter.system.spawnParticle.rp_colorData,
-						rp_emitter.system.spawnParticle.rp_lifetimeData
+						defaultParticle.rp_transform,
+						defaultParticle.rp_colorData,
+						defaultParticle.rp_lifetimeData
 					);
 				}
 				else {
 					p = RectParticleUtils::CreateRandomParticle(view_size);
 				}
-
-				// position: if circle emitter, random point inside radius
-				if (emitterShape == EmitterShape::Circle && emitterSpawnRadius > 0.0f) {
-					float a = (static_cast<float>(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
-					float r = sqrtf(static_cast<float>(rand()) / RAND_MAX) * emitterSpawnRadius;
-					ImVec2 offs = ImVec2(cosf(a) * r, sinf(a) * r);
-					p.rp_transform.p_position = ImVec2(pos.x + offs.x, pos.y + offs.y);
-				}
-				else {
-					p.rp_transform.p_position = pos;
-				}
-
 				particles.push_back(std::move(p));
 			}
 		}
@@ -102,7 +84,6 @@ namespace Particles {
 		void ClearParticles()
 		{
 			particles.clear();
-			rp_emitter.system.activeParticles.clear();
 		}
 
 
@@ -132,9 +113,9 @@ namespace Particles {
 
 			for (int i = 0; i < createCount; ++i) {
 				RectParticle p = RectParticleUtils::CreateParticle(
-					rp_emitter.system.spawnParticle.rp_transform,
-					rp_emitter.system.spawnParticle.rp_colorData,
-					rp_emitter.system.spawnParticle.rp_lifetimeData
+					defaultParticle.rp_transform,
+					defaultParticle.rp_colorData,
+					defaultParticle.rp_lifetimeData
 				);
 
 				p.rp_transform.p_position = lastClickPos;
@@ -160,14 +141,6 @@ namespace Particles {
 
 				particles.push_back(std::move(p));
 			}
-
-			//RectParticleUtils::CreateRadialParticleBurst(
-			//	view_size,
-			//	lastClickPos,
-			//	100,
-			//	particles,
-			//	&rp_emitter.system.spawnParticle
-			//);
 		}
 
 		// minimal preset save/load (very simple CSV-like)
@@ -221,9 +194,6 @@ namespace Particles {
 			if (initialSize.x <= 0.0f || initialSize.y <= 0.0f) {
 				initialSize = min_view_size;
 			}
-
-			rp_emitter = RectParticleEmitter(initialSize, &defaultParticle, &defaultParticle);
-			//Inititialize();
 		}
 
 
@@ -239,8 +209,6 @@ namespace Particles {
 				view_size = win_size;
 				if (view_size.x < min_view_size.x) view_size.x = min_view_size.x;
 				if (view_size.y < min_view_size.y) view_size.y = min_view_size.y;
-
-				rp_emitter.SetViewportSize(view_size);
 
 				ImGui::InvisibleButton("viewport", view_size);
 				if (ImGui::IsItemHovered()) {
@@ -273,12 +241,7 @@ namespace Particles {
 				}
 				if (bg_particle.bg_lifetimeData.p_lifetime >= bg_particle.bg_lifetimeData.p_maxLifetime) {
 					bg_particle.bg_lifetimeData.p_lifetime = 0.0f;
-					bg_particle.bg_lifetimeData.p_maxLifetime = 5.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 5.0f));
-
-					bg_particle.bg_colorData.p_startColor = bg_particle.bg_colorData.p_endColor;
-					bg_particle.bg_colorData.p_endColor = ImVec4(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
-						static_cast <float> (rand()) / static_cast <float> (RAND_MAX), 1.0f);
+					bg_particle.bg_colorData.p_currColor = bg_particle.bg_colorData.p_startColor;
 				}
 				float bg_lifeRatio = bg_particle.bg_lifetimeData.p_lifetime / bg_particle.bg_lifetimeData.p_maxLifetime;
 				bg_lifeRatio = std::clamp(bg_lifeRatio, 0.0f, 1.0f);
@@ -312,9 +275,6 @@ namespace Particles {
 						RectParticleUtils::DrawParticle(draw_list, particle, view_pos);
 					}
 				}
-
-				//rp_emitter.Draw(draw_list, view_pos);
-
 				RectParticleUtils::RestrictParticles(particles, maxParticleCount, view_size);
 			}
 
@@ -361,10 +321,9 @@ namespace Particles {
 			// apply global speed multiplier & paused/step logic
 			float simTs = ts * globalSpeedMultiplier;
 			if (paused && !stepOnce) {
-				// no simulation update, but maybe we still want to process emitter UI updates
-				// Keep background color animation though
+
+				/// TODO: add bg update even when paused?
 				bg_particle.bg_lifetimeData.p_lifetime += ts;
-				// update bg color (same as in your original OnUpdate)
 				if (bg_particle.bg_lifetimeData.p_maxLifetime <= 0.0f)
 					bg_particle.bg_lifetimeData.p_maxLifetime = 1.0f;
 				float bg_lifeRatio = bg_particle.bg_lifetimeData.p_lifetime / bg_particle.bg_lifetimeData.p_maxLifetime;
@@ -426,17 +385,6 @@ namespace Particles {
 				bg_particle.bg_colorData.p_startColor.z + (bg_particle.bg_colorData.p_endColor.z - bg_particle.bg_colorData.p_startColor.z) * bg_lifeRatio,
 				1.0f);
 
-			// emitter update (let the emitter produce particles if it handles emission internally)
-			//rp_emitter.Update(simTs, view_size, lastClickPos);
-
-			// If the emitter has its own logic we also respect emitterAutoEmit: if it's disabled we won't let emitter produce new particles
-			// (Assuming RectParticleEmitter::Update uses system.emissionRate; if it doesn't, you'd call rp_emitter.Emit(...) from here instead)
-			if (!emitterAutoEmit) {
-				// attempt to clear emitter's generated particles so it doesn't add automatically.
-				// This depends on emitter design. If emitter adds to system.activeParticles inside Update, you may need to prevent that upstream.
-				// As a simple fallback, we won't clear here to not break the emitter internals.
-			}
-
 			HandleHoverBurst(simTs);
 			HandleClick(simTs);
 
@@ -455,12 +403,12 @@ namespace Particles {
 	{
 	public:
 		float sliderSpeed = 1.0f;
-		int defaultParticleCount = 100;
-		int maxParticleCount = 300;
-		int hoverBurstCount = 25;
-		float hoverBurstInterval = 0.05f;
+		int defaultParticleCount = 10000;
+		int maxParticleCount = 30000;
+		int hoverBurstCount = 50;
+		float hoverBurstInterval = 0.01f;
 		float hoverBurstTimer = 0.0f;
-		float readyTimer = 0.5f;
+		float readyTimer = 0.25f;
 		bool startEventTriggered = false;
 		RectParticle defaultParticle;
 		BackgroundParticle defaultBackground;
@@ -514,8 +462,6 @@ namespace Particles {
 			if (p_layer) {
 				p_layer->defaultParticle = defaultParticle;
 				p_layer->useDefaultParticle = useDefaultParticle;
-				p_layer->rp_emitter = RectParticleEmitter(p_layer->view_size, &p_layer->defaultParticle, &p_layer->defaultParticle);
-				p_layer->rp_emitter.emissionMode = EmissionMode::EMIT_CONTINUOUS_DEFAULT;
 			}
 		}
 
@@ -556,12 +502,20 @@ namespace Particles {
 
 				if (ImGui::TreeNode("Background Particle")) {
 
+					ImGui::ColorEdit4("Start Color", (float*)&defaultBackground.bg_colorData.p_startColor);
+					ImGui::ColorEdit4("End Color", (float*)&defaultBackground.bg_colorData.p_endColor);
+					ImGui::Checkbox("Lerp Color", &defaultBackground.bg_colorData.p_lerpColor);
+					ImGui::DragFloat("Lerp Speed", &defaultBackground.bg_colorData.p_lerpSpeed, sliderSpeed, 0.0f, 5.0f);
 
+					ImGui::DragFloat("Max Lifetime", &defaultBackground.bg_lifetimeData.p_maxLifetime, 0.01f, 0.01f, 60.0f);
+					ImGui::Checkbox("Randomize Lifetime", &defaultBackground.bg_lifetimeData.p_randomizeLifetime);
 
 					ImGui::Separator();
 					ImGui::TreePop();
 					ImGui::Spacing();
 				}
+
+				p_layer->bg_particle = defaultBackground;
 
 				// Speed multiplier
 				ImGui::DragFloat("Global Speed Multiplier", &p_layer->globalSpeedMultiplier, 0.1f, 0.0f, 10.0f);
@@ -682,46 +636,6 @@ namespace Particles {
 			p_layer->defaultParticle = defaultParticle;
 			p_layer->useDefaultParticle = useDefaultParticle;
 
-			// Emitter panel
-			if (ImGui::TreeNode("Particle Emitter")) {
-				auto& emitter = p_layer->rp_emitter;
-				auto& sys = emitter.system;
-
-				ImGui::Text("Emitter Controls");
-				ImGui::DragFloat2("Emitter Position", (float*)&sys.s_position, sliderSpeed, 0.0f, p_layer->view_size.x);
-				ImGui::DragFloat("Spawn Radius", &p_layer->emitterSpawnRadius, 1.0f, 0.0f, std::max(p_layer->view_size.x, p_layer->view_size.y));
-				ImGui::Combo("Emitter Shape", (int*)&p_layer->emitterShape, "Point\0Circle\0\0");
-
-				ImGui::DragFloat("Emission Rate (particles/sec)", &sys.emissionRate, 0.1f, 0.0f, 2000.0f);
-				ImGui::DragInt("Emitter Max Particles", &sys.maxParticles, 1, 0, 10000);
-
-				ImGui::Checkbox("Auto Emit (emitter)", &p_layer->emitterAutoEmit);
-				ImGui::DragInt("Manual Emit Count", &p_layer->emitterManualEmitCount, 1, 1, 5000);
-
-				if (ImGui::Button("Emit Manual")) {
-					// if emitter shape circle -> spawn around sys.s_position
-					ImVec2 pos = sys.emitterParticle.rp_transform.p_position;
-					p_layer->EmitAt(pos, p_layer->emitterManualEmitCount);
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Reset Emitter")) {
-					emitter.Reset(p_layer->view_size, &p_layer->defaultParticle, &p_layer->defaultParticle);
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Clear Emitter Children")) {
-					sys.activeParticles.clear();
-				}
-
-				// show linked color
-				ImGui::Text("Linked spawn color: (%.2f, %.2f, %.2f)", sys.spawnParticle.rp_colorData.p_startColor.x, sys.spawnParticle.rp_colorData.p_startColor.y, sys.spawnParticle.rp_colorData.p_startColor.z);
-
-				// keep emitter linked to layer defaults
-				emitter.system.spawnParticle = p_layer->defaultParticle;
-				emitter.system.emitterParticle = p_layer->defaultParticle;
-
-				ImGui::TreePop();
-			}
-
 			ImGui::Separator();
 
 			// Physics / visual controls
@@ -750,15 +664,16 @@ namespace Particles {
 
 			p_layer->defaultParticle = defaultParticle;
 			p_layer->useDefaultParticle = useDefaultParticle;
-			p_layer->rp_emitter.system.emitterParticle = p_layer->defaultParticle;
-			p_layer->rp_emitter.system.spawnParticle = p_layer->defaultParticle;
+
 			ImGui::End();
 		}
 
 		virtual void OnUpdate(float ts) override {
-			//p_layer->rp_emitter.Update(ts, p_layer->view_size, p_layer->lastClickPos);
-			p_layer->rp_emitter.system.spawnParticle = p_layer->defaultParticle;
+			p_layer->bg_particle = defaultBackground;
 
+			// Trigger a click event at the center of the viewport after readyTimer elapses
+			// ensures the particle pool is initialized
+			/// TODO: figure out cause of no auto emit on first run
 			if (!startEventTriggered) {
 				readyTimer -= ts;
 				if (readyTimer <= 0.0f) {
@@ -767,9 +682,6 @@ namespace Particles {
 					startEventTriggered = true;
 				}
 			}
-
-
-
 		}
 	};
 

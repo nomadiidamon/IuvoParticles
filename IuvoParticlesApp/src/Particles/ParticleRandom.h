@@ -17,6 +17,7 @@ namespace Particles
 		return dist(GetRNG());
 	}
 
+	constexpr float EPS = 1e-6f;
 	static constexpr float PI_F = 3.14159265358979323846f;
 	inline float DegToRad(float d) { return d * (PI_F / 180.0f); }
 }

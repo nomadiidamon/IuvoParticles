@@ -75,14 +75,16 @@ namespace Particles {
             const ImVec2& position = ImVec2(-FLT_MAX, -FLT_MAX),
             const RectParticle* templateParticle = nullptr)
         {
-            // If caller supplied a position use it; otherwise CreateRandomInternal will pick a random position
-            if (position.x == -FLT_MAX || position.y == -FLT_MAX) {
+            // If caller supplied a position, create a random particle but force that position.
+            if (position.x != -FLT_MAX && position.y != -FLT_MAX) {
                 RectParticle p = RectParticleController::CreateRandomInternal(view_size, templateParticle);
                 p.rp_transform.p_position = position;
-                p.rp_transform.p_center = ImVec2(position.x + p.rp_transform.p_size.x * 0.5f, position.y + p.rp_transform.p_size.y * 0.5f);
+                p.rp_transform.p_center = ImVec2(position.x + p.rp_transform.p_size.x * 0.5f,
+                    position.y + p.rp_transform.p_size.y * 0.5f);
                 return p;
             }
             else {
+                // no position supplied => return a particle with internally randomized position
                 return RectParticleController::CreateRandomInternal(view_size, templateParticle);
             }
         }
@@ -92,16 +94,20 @@ namespace Particles {
             RectParticle out;
             
             if (defaultParticle) {
-				if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
-					out = RectParticleController::CreateFromTemplate(*defaultParticle);
-					out.rp_transform.p_position = pos;
-					out.rp_transform.p_center = ImVec2(pos.x + out.rp_transform.p_size.x * 0.5f,
-						pos.y + out.rp_transform.p_size.y * 0.5f);
-					return out;
-				}
+                if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
+                    out = RectParticleController::CreateFromTemplate(*defaultParticle);
+                    out.rp_transform.p_position = pos;
+                    out.rp_transform.p_center = ImVec2(pos.x + out.rp_transform.p_size.x * 0.5f,
+                        pos.y + out.rp_transform.p_size.y * 0.5f);
+                    return out;
+                }
                 else {
-					out =  RectParticleController::CreateFromTemplate(*defaultParticle);
-					out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
+                    // Use provided default template centered in the view
+                    out = RectParticleController::CreateFromTemplate(*defaultParticle);
+                    out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
+                    // make sure center is synced
+                    RectParticleController(out).UpdateCenter();
+                    return out; // <-- missing previously
                 }
             }
             else {
@@ -180,18 +186,12 @@ namespace Particles {
 			}
 		}
 
-        //static void ResetParticle(RectParticle& particle, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
-        //    RectParticleController controller(particle);
-        //    controller.Reset(view_size, useDefaultParticle, defaultParticle);
-        //}
-
         static bool IsExpired(const RectParticle& particle) {
             return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
         }
 
         
         static bool IsEqualKeyAttributes(const RectParticle& a, const RectParticle& b) {
-            constexpr float EPS = 1e-6f;
             auto feq = [&](float x, float y) { return fabsf(x - y) <= EPS; };
             return feq(a.rp_transform.p_position.x, b.rp_transform.p_position.x) &&
                 feq(a.rp_transform.p_position.y, b.rp_transform.p_position.y) &&
@@ -206,66 +206,9 @@ namespace Particles {
                 feq(a.rp_lifetimeData.p_maxLifetime, b.rp_lifetimeData.p_maxLifetime);
         }
 
-        //// Delegation: apply velocity/rotation/scale via controller
-        //static void ApplyVelocity(RectParticle& particle, float ts) {
-        //    RectParticleController ctrl(particle);
-        //    ctrl.ApplyVelocity(ts);
-        //}
-
-        //static void ApplyRotation(RectParticle& particle, float ts) {
-        //    RectParticleController ctrl(particle);
-        //    ctrl.ApplyRotation(ts);
-        //}
-
-        //static void ApplyScale(RectParticle& particle, float ts) {
-        //    RectParticleController ctrl(particle);
-        //    ctrl.ApplyScale(ts);
-        //}
-
         static void CalculateRotatedRectCorners(const RectParticle& particle, ImVec2 outCorners[4]) {
             RectParticleController::CalculateRotatedRectCorners(particle, outCorners);
         }
-
-        //static void UpdateRotation(RectParticle& particle, float ts) {
-        //    if (particle.rp_animation.canRotate) ApplyRotation(particle, ts);
-        //}
-
-        //static void UpdateAnimation2D(RectParticle& particle, float ts) {
-        //    RectParticleController ctrl(const_cast<RectParticle&>(particle));
-        //    if (particle.rp_animation.canMove) ctrl.ApplyVelocity(ts);
-        //    if (particle.rp_animation.canRotate) ctrl.ApplyRotation(ts);
-        //    if (particle.rp_animation.canScale) ctrl.ApplyScale(ts);
-        //}
-
-        //static void UpdateLifetime(RectParticle& particle, float ts) {
-        //    RectParticleController ctrl(particle);
-        //    ctrl.UpdateLifetime(ts);
-        //}
-
-        //static ImU32 FadeColor(RectParticle& particle) {
-        //    RectParticleController ctrl(particle);
-        //    return ctrl.FadeColor();
-        //}
-
-        //static ImU32 LerpColor(RectParticle& particle) {
-        //    RectParticleController ctrl(particle);
-        //    return ctrl.LerpColor();
-        //}
-
-        //static void UpdateColor(RectParticle& particle) {
-        //    RectParticleController ctrl(particle);
-        //    ctrl.UpdateColor();
-        //}
-
-        //static bool HitViewportBounds(const RectParticle& particle, const ImVec2& view_size) {
-        //    RectParticleController ctrl(const_cast<RectParticle&>(particle));
-        //    return ctrl.HitViewportBounds(view_size);
-        //}
-
-        //static bool ApplyReboundForce(RectParticle& particle, const ImVec2& view_size) {
-        //    RectParticleController ctrl(particle);
-        //    return ctrl.ApplyReboundForce(view_size);
-        //}
 
         static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
 			RectParticleController(particle).Update(ts, view_size, useDefaultParticle, defaultParticle);
@@ -327,29 +270,25 @@ namespace Particles {
 
         /// TODO: update this to use the default sub structs in ParticleTypes.h
         static bool IsDefaultParticle(const RectParticle& particle) {
-            ParticleColor defaultColor;
-            ParticleAnimation2D defaultAnimation;
-            ParticleLifetime defaultLifetime;
-            ParticleTransform defaultTransform;
-
+  
             auto feq = [](float a, float b) { return fabsf(a - b) <= 1e-6f; };
 
-            bool transformDefault = feq(particle.rp_transform.p_position.x, defaultTransform.p_position.x) &&
-                feq(particle.rp_transform.p_position.y, defaultTransform.p_position.y) &&
-                feq(particle.rp_transform.p_size.x, defaultTransform.p_size.x) &&
-                feq(particle.rp_transform.p_size.y, defaultTransform.p_size.y);
+            bool transformDefault = feq(particle.rp_transform.p_position.x, ParticleTransform::DEFAULT_TRANSFORM.p_position.x) &&
+                feq(particle.rp_transform.p_position.y, ParticleTransform::DEFAULT_TRANSFORM.p_position.y) &&
+                feq(particle.rp_transform.p_size.x, ParticleTransform::DEFAULT_TRANSFORM.p_size.x) &&
+                feq(particle.rp_transform.p_size.y, ParticleTransform::DEFAULT_TRANSFORM.p_size.y);
 
-            bool animDefault = feq(particle.rp_animation.p_velocity.x, defaultAnimation.p_velocity.x) &&
-                feq(particle.rp_animation.p_velocity.y, defaultAnimation.p_velocity.y) &&
-                feq(particle.rp_animation.p_movementSpeed, defaultAnimation.p_movementSpeed);
+            bool animDefault = feq(particle.rp_animation.p_velocity.x, ParticleAnimation2D::DEFAULT_ANIMATION.p_velocity.x) &&
+                feq(particle.rp_animation.p_velocity.y, ParticleAnimation2D::DEFAULT_ANIMATION.p_velocity.y) &&
+                feq(particle.rp_animation.p_movementSpeed, ParticleAnimation2D::DEFAULT_ANIMATION.p_movementSpeed);
 
-            bool colorDefault = feq(particle.rp_colorData.p_currColor.x, defaultColor.p_currColor.x) &&
-                feq(particle.rp_colorData.p_currColor.y, defaultColor.p_currColor.y) &&
-                feq(particle.rp_colorData.p_currColor.z, defaultColor.p_currColor.z) &&
-                feq(particle.rp_colorData.p_currColor.w, defaultColor.p_currColor.w);
+            bool colorDefault = feq(particle.rp_colorData.p_currColor.x, ParticleColor::DEFAULT_COLOR.p_currColor.x) &&
+                feq(particle.rp_colorData.p_currColor.y, ParticleColor::DEFAULT_COLOR.p_currColor.y) &&
+                feq(particle.rp_colorData.p_currColor.z, ParticleColor::DEFAULT_COLOR.p_currColor.z) &&
+                feq(particle.rp_colorData.p_currColor.w, ParticleColor::DEFAULT_COLOR.p_currColor.w);
 
-            bool lifetimeDefault = feq(particle.rp_lifetimeData.p_lifetime, defaultLifetime.p_lifetime) &&
-                feq(particle.rp_lifetimeData.p_maxLifetime, defaultLifetime.p_maxLifetime);
+            bool lifetimeDefault = feq(particle.rp_lifetimeData.p_lifetime, ParticleLifetime::DEFAULT_LIFETIME.p_lifetime) &&
+                feq(particle.rp_lifetimeData.p_maxLifetime, ParticleLifetime::DEFAULT_LIFETIME.p_maxLifetime);
 
             return transformDefault && animDefault && colorDefault && lifetimeDefault;
         }
