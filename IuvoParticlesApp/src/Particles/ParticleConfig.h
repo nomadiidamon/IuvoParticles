@@ -14,14 +14,14 @@ namespace Particles {
         ImVec2 defaultSpawnSize = ImVec2(10.0f, 10.0f);
 
         // Position fallback (center)
-        ImVec2 defaultEmitterPosition = ImVec2(400.0f, 300.0f);
+        ImVec2 defaultEmitterPosition = ImVec2(150.0f, 150.0f);
 
         // Rotation ranges (degrees)
         float rotationMin = 0.0f;
         float rotationMax = 360.0f;
 
         // Movement speed range (units/sec)
-        float movementSpeedMin = 20.0f;
+        float movementSpeedMin = 0.0f;
         float movementSpeedMax = 100.0f;
 
         // Rotation speed range (degrees/sec)
@@ -40,7 +40,7 @@ namespace Particles {
         // Color randomization defaults (0..1)
         ImVec4 defaultStartColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
         ImVec4 defaultEndColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-        ImVec4 defaultCurrColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+        ImVec4 defaultCurrColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 
         // Default movement/behavior
         ImVec2 defaultVelocity = ImVec2(0.0f, -1.0f);

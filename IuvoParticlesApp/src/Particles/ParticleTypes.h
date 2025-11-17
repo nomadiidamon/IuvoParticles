@@ -29,6 +29,7 @@ namespace Particles {
 		ImVec2 p_baseSize = ImVec2(50.0f, 50.0f); // store base size to compute non-destructive scaling each frame
 		ImVec2 p_rotation = ImVec2(0.0f, 0.0f); // using x as angle in degrees for 2D rotation
 
+		bool p_randomPosition = false;
 		bool p_randomSize = false;
 		bool p_randomRotation = false;
 	};
@@ -44,4 +45,14 @@ namespace Particles {
 		bool canRotate = true;
 		bool canScale = false;
 	};
+
+	//struct ParticleUV {
+	//	ImVec2 p_uv0 = ImVec2(0.0f, 0.0f);
+	//	ImVec2 p_uv1 = ImVec2(1.0f, 1.0f);
+	//};
+
+	//struct ParticleTexture {
+	//	/// TODO: file path for texture
+	//	ImVec2 p_textureSize = ImVec2(0.0f, 0.0f);
+	//};
 }
