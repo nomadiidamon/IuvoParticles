@@ -180,10 +180,10 @@ namespace Particles {
 			}
 		}
 
-        static void ResetParticle(RectParticle& particle, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
-            RectParticleController controller(particle);
-            controller.Reset(view_size, useDefaultParticle, defaultParticle);
-        }
+        //static void ResetParticle(RectParticle& particle, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+        //    RectParticleController controller(particle);
+        //    controller.Reset(view_size, useDefaultParticle, defaultParticle);
+        //}
 
         static bool IsExpired(const RectParticle& particle) {
             return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
@@ -206,70 +206,69 @@ namespace Particles {
                 feq(a.rp_lifetimeData.p_maxLifetime, b.rp_lifetimeData.p_maxLifetime);
         }
 
-        // Delegation: apply velocity/rotation/scale via controller
-        static void ApplyVelocity(RectParticle& particle, float ts) {
-            RectParticleController ctrl(particle);
-            ctrl.ApplyVelocity(ts);
-        }
+        //// Delegation: apply velocity/rotation/scale via controller
+        //static void ApplyVelocity(RectParticle& particle, float ts) {
+        //    RectParticleController ctrl(particle);
+        //    ctrl.ApplyVelocity(ts);
+        //}
 
-        static void ApplyRotation(RectParticle& particle, float ts) {
-            RectParticleController ctrl(particle);
-            ctrl.ApplyRotation(ts);
-        }
+        //static void ApplyRotation(RectParticle& particle, float ts) {
+        //    RectParticleController ctrl(particle);
+        //    ctrl.ApplyRotation(ts);
+        //}
 
-        static void ApplyScale(RectParticle& particle, float ts) {
-            RectParticleController ctrl(particle);
-            ctrl.ApplyScale(ts);
-        }
+        //static void ApplyScale(RectParticle& particle, float ts) {
+        //    RectParticleController ctrl(particle);
+        //    ctrl.ApplyScale(ts);
+        //}
 
         static void CalculateRotatedRectCorners(const RectParticle& particle, ImVec2 outCorners[4]) {
             RectParticleController::CalculateRotatedRectCorners(particle, outCorners);
         }
 
-        static void UpdateRotation(RectParticle& particle, float ts) {
-            if (particle.rp_animation.canRotate) ApplyRotation(particle, ts);
-        }
+        //static void UpdateRotation(RectParticle& particle, float ts) {
+        //    if (particle.rp_animation.canRotate) ApplyRotation(particle, ts);
+        //}
 
-        static void UpdateAnimation2D(RectParticle& particle, float ts) {
-            RectParticleController ctrl(const_cast<RectParticle&>(particle));
-            if (particle.rp_animation.canMove) ctrl.ApplyVelocity(ts);
-            if (particle.rp_animation.canRotate) ctrl.ApplyRotation(ts);
-            if (particle.rp_animation.canScale) ctrl.ApplyScale(ts);
-        }
+        //static void UpdateAnimation2D(RectParticle& particle, float ts) {
+        //    RectParticleController ctrl(const_cast<RectParticle&>(particle));
+        //    if (particle.rp_animation.canMove) ctrl.ApplyVelocity(ts);
+        //    if (particle.rp_animation.canRotate) ctrl.ApplyRotation(ts);
+        //    if (particle.rp_animation.canScale) ctrl.ApplyScale(ts);
+        //}
 
-        static void UpdateLifetime(RectParticle& particle, float ts) {
-            RectParticleController ctrl(particle);
-            ctrl.UpdateLifetime(ts);
-        }
+        //static void UpdateLifetime(RectParticle& particle, float ts) {
+        //    RectParticleController ctrl(particle);
+        //    ctrl.UpdateLifetime(ts);
+        //}
 
-        static ImU32 FadeColor(RectParticle& particle) {
-            RectParticleController ctrl(particle);
-            return ctrl.FadeColor();
-        }
+        //static ImU32 FadeColor(RectParticle& particle) {
+        //    RectParticleController ctrl(particle);
+        //    return ctrl.FadeColor();
+        //}
 
-        static ImU32 LerpColor(RectParticle& particle) {
-            RectParticleController ctrl(particle);
-            return ctrl.LerpColor();
-        }
+        //static ImU32 LerpColor(RectParticle& particle) {
+        //    RectParticleController ctrl(particle);
+        //    return ctrl.LerpColor();
+        //}
 
-        static void UpdateColor(RectParticle& particle) {
-            RectParticleController ctrl(particle);
-            ctrl.UpdateColor();
-        }
+        //static void UpdateColor(RectParticle& particle) {
+        //    RectParticleController ctrl(particle);
+        //    ctrl.UpdateColor();
+        //}
 
-        static bool HitViewportBounds(const RectParticle& particle, const ImVec2& view_size) {
-            RectParticleController ctrl(const_cast<RectParticle&>(particle));
-            return ctrl.HitViewportBounds(view_size);
-        }
+        //static bool HitViewportBounds(const RectParticle& particle, const ImVec2& view_size) {
+        //    RectParticleController ctrl(const_cast<RectParticle&>(particle));
+        //    return ctrl.HitViewportBounds(view_size);
+        //}
 
-        static bool ApplyReboundForce(RectParticle& particle, const ImVec2& view_size) {
-            RectParticleController ctrl(particle);
-            return ctrl.ApplyReboundForce(view_size);
-        }
+        //static bool ApplyReboundForce(RectParticle& particle, const ImVec2& view_size) {
+        //    RectParticleController ctrl(particle);
+        //    return ctrl.ApplyReboundForce(view_size);
+        //}
 
         static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
-            RectParticleController ctrl(particle);
-            ctrl.Update(ts, view_size, useDefaultParticle, defaultParticle);
+			RectParticleController(particle).Update(ts, view_size, useDefaultParticle, defaultParticle);
         }
 
 		static void DrawParticleAgnostic(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
