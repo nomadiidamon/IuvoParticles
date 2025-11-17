@@ -13,6 +13,8 @@ namespace Particles {
 		bool p_useAlpha = true;
 		bool p_randomizeColor = false;
 	};
+	/// TODO: add static const ParticleColor DEFAULT_COLOR{}
+
 
 	struct ParticleLifetime {
 		float p_lifetime = 0.0f;
@@ -20,6 +22,8 @@ namespace Particles {
 		bool p_randomizeLifetime = false;
 		bool p_loop = false;
 	};
+	/// TODO: add static const ParticleLifetime DEFAULT_LIFETIME{}
+
 
 	struct ParticleTransform {
 		ImVec2 p_position = ImVec2(0.0f, 0.0f);
@@ -33,6 +37,8 @@ namespace Particles {
 		bool p_randomSize = false;
 		bool p_randomRotation = false;
 	};
+	/// TODO: add static const ParticleTransform DEFAULT_TRANSFORM{}
+
 
 	struct ParticleAnimation2D {
 		ImVec2 p_velocity = ImVec2(0.0f, 0.0f);
@@ -45,14 +51,18 @@ namespace Particles {
 		bool canRotate = true;
 		bool canScale = false;
 	};
+	/// TODO: add static const ParticleAnimation2D DEFAULT_ANIMATION{}
+
 
 	//struct ParticleUV {
 	//	ImVec2 p_uv0 = ImVec2(0.0f, 0.0f);
 	//	ImVec2 p_uv1 = ImVec2(1.0f, 1.0f);
 	//};
+	/// TODO: add static const ParticleUV DEFAULT_UV{}
 
 	//struct ParticleTexture {
-	//	/// TODO: file path for texture
+	//	/// TODO: file path for texture / Walnut image
 	//	ImVec2 p_textureSize = ImVec2(0.0f, 0.0f);
 	//};
+	/// TODO: add static const ParticleTexture DEFAULT_TEXTURE{}
 }

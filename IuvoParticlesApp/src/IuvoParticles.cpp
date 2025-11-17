@@ -429,6 +429,12 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	app->PushLayer(particleLayer);
 	app->PushLayer(propertiesLayer);
 
+	//auto emitterLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_LAYER>();
+	//auto emitterPropertiesLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_PROPERTIES>();
+	//emitterPropertiesLayer->SetEmitterLayer(emitterLayer.get());
+	//app->PushLayer(emitterLayer);
+	//app->PushLayer(emitterPropertiesLayer);
+
 	app->SetMenubarCallback([app]()
 		{
 			if (ImGui::BeginMenu("File"))

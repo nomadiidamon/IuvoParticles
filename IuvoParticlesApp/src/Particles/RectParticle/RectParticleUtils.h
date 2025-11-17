@@ -6,11 +6,13 @@
 
 namespace Particles {
 
-    static class RectParticleUtils {
+    class RectParticleUtils {
     public:
         // --- Creation API
         // New: large "full" entry point with many parameters for creation
 
+
+		/// TODO: create a struct for initialization parameters to avoid long parameter lists
         static RectParticle CreateParticleFull(
             const ImVec2& view_size,
             const ImVec2& position,
@@ -68,14 +70,13 @@ namespace Particles {
             return p;
         }
 
-        // Existing convenience functions retained, now delegating to CreateParticleFull or controller helpers
 
         static RectParticle CreateRandomParticle(const ImVec2& view_size,
-            const ImVec2& position = ImVec2(0.0f, 0.0f),
+            const ImVec2& position = ImVec2(-FLT_MAX, -FLT_MAX),
             const RectParticle* templateParticle = nullptr)
         {
             // If caller supplied a position use it; otherwise CreateRandomInternal will pick a random position
-            if (position.x != 0.0f || position.y != 0.0f) {
+            if (position.x == -FLT_MAX || position.y == -FLT_MAX) {
                 RectParticle p = RectParticleController::CreateRandomInternal(view_size, templateParticle);
                 p.rp_transform.p_position = position;
                 p.rp_transform.p_center = ImVec2(position.x + p.rp_transform.p_size.x * 0.5f, position.y + p.rp_transform.p_size.y * 0.5f);
@@ -86,19 +87,35 @@ namespace Particles {
             }
         }
 
-        static RectParticle CreateDefaultParticle(const ImVec2& view_size, const RectParticle* defaultParticle = nullptr) {
+        static RectParticle CreateDefaultParticle(const ImVec2& view_size, const ImVec2& pos = ImVec2(-FLT_MAX, -FLT_MAX), const RectParticle* defaultParticle = nullptr) {
             const auto& cfg = GetParticleConfig();
+            RectParticle out;
+            
             if (defaultParticle) {
-                return RectParticleController::CreateFromTemplate(*defaultParticle);
+				if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
+					out = RectParticleController::CreateFromTemplate(*defaultParticle);
+					out.rp_transform.p_position = pos;
+					out.rp_transform.p_center = ImVec2(pos.x + out.rp_transform.p_size.x * 0.5f,
+						pos.y + out.rp_transform.p_size.y * 0.5f);
+					return out;
+				}
+                else {
+					out =  RectParticleController::CreateFromTemplate(*defaultParticle);
+					out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
+                }
             }
             else {
                 // If a configured spawn template exists, use it
                 if (cfg.defaultSpawnTemplate.rp_transform.p_size.x > 0.0f && cfg.defaultSpawnTemplate.rp_transform.p_size.y > 0.0f) {
-                    return RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
+                    //return RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
+                    if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
+                        out = RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
+                        out.rp_transform.p_position = pos;
+						RectParticleController(out).UpdateCenter();
+                    }
                 }
 
                 // fallback to a basic default that uses config defaults
-                RectParticle out;
                 out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
                 out.rp_transform.p_size = cfg.defaultSpawnSize;
                 out.rp_transform.p_baseSize = out.rp_transform.p_size;
@@ -131,6 +148,38 @@ namespace Particles {
             return particle;
         }
 
+		static void CreateRadialParticleBurst(const ImVec2& viewSize, const ImVec2 burstPos, int burstCount,
+            std::vector<RectParticle>& container, const RectParticle* templateParticle = nullptr)
+        {
+			for (int i = 0; i < burstCount; ++i) {
+				RectParticle p = CreateDefaultParticle(viewSize, burstPos, templateParticle);
+
+				// Random radial velocity
+				float angle = (static_cast<float>(rand()) / RAND_MAX) * 2.0f * 3.14159265358979323846f;
+				float minSpeed = 200.0f;
+				float maxSpeed = 300.0f;
+				float speed = minSpeed + (static_cast<float>(rand()) / RAND_MAX) * (maxSpeed - minSpeed);
+				p.rp_animation.p_velocity = ImVec2(cosf(angle), sinf(angle));
+				p.rp_animation.p_movementSpeed = speed;
+				p.rp_animation.canMove = true;
+
+                // random lifetime around base
+                float baseLifetime = p.rp_lifetimeData.p_maxLifetime > 0.0f ? p.rp_lifetimeData.p_maxLifetime : 10.0f;
+				float randLifetime = baseLifetime * RandFloat(0.75f, 5.5f);
+                p.rp_lifetimeData.p_maxLifetime = randLifetime;
+                p.rp_lifetimeData.p_lifetime = 0.0f;
+
+
+				// set color lerp/fade
+				p.rp_colorData.p_currColor = p.rp_colorData.p_startColor;
+				p.rp_colorData.p_lerpColor = true;
+				p.rp_colorData.p_useAlpha = true;
+				p.rp_colorData.p_endColor.w = 0.0f; // fade out
+                //container.push_back(std::move(p));
+				container.push_back(p);
+			}
+		}
+
         static void ResetParticle(RectParticle& particle, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
             RectParticleController controller(particle);
             controller.Reset(view_size, useDefaultParticle, defaultParticle);
@@ -140,7 +189,8 @@ namespace Particles {
             return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
         }
 
-        static bool IsEqual(const RectParticle& a, const RectParticle& b) {
+        
+        static bool IsEqualKeyAttributes(const RectParticle& a, const RectParticle& b) {
             constexpr float EPS = 1e-6f;
             auto feq = [&](float x, float y) { return fabsf(x - y) <= EPS; };
             return feq(a.rp_transform.p_position.x, b.rp_transform.p_position.x) &&
@@ -222,6 +272,17 @@ namespace Particles {
             ctrl.Update(ts, view_size, useDefaultParticle, defaultParticle);
         }
 
+		static void DrawParticleAgnostic(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
+			bool rotated = (particle.rp_animation.canRotate && particle.rp_transform.p_rotation.x != 0.0f);
+
+			if (rotated) {
+				DrawRotatingParticle(draw_list, particle, view_pos);
+			}
+			else {
+				DrawParticle(draw_list, particle, view_pos);
+			}
+		}
+
         static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
             ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
             draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.p_position.x, view_pos.y + particle.rp_transform.p_position.y),
@@ -265,6 +326,7 @@ namespace Particles {
             ClampParticleCount(particles, maxCount, view_size);
         }
 
+        /// TODO: update this to use the default sub structs in ParticleTypes.h
         static bool IsDefaultParticle(const RectParticle& particle) {
             ParticleColor defaultColor;
             ParticleAnimation2D defaultAnimation;
