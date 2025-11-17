@@ -1,8 +1,9 @@
 #pragma once
-#include "RectParticle.h"
-#include "RectParticleUtils.h"
+#include "../RectParticle/RectParticleUtils.h"
+
 
 namespace Particles {
+
     struct RectParticleCache {
         ImVec2 cachedCenter = ImVec2(0.0f, 0.0f);
         ImVec2 cachedCorners[4];    // rotated rect corners

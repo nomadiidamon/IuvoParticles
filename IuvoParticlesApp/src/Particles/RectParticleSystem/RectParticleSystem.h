@@ -1,5 +1,6 @@
 #pragma once
 #include "../RectParticle/RectParticleUtils.h"
+#include "../RectParticle/RectParticleCache.h"
 
 namespace Particles {
     struct ParticleSystem {

@@ -1,7 +1,6 @@
 #pragma once
 #include "RectParticle.h"
 #include "RectParticleController.h"
-#include "RectParticleCache.h"
 #include "../ParticleConfig.h"
 #include "../ParticleRandom.h"
 
@@ -11,6 +10,7 @@ namespace Particles {
     public:
         // --- Creation API
         // New: large "full" entry point with many parameters for creation
+
         static RectParticle CreateParticleFull(
             const ImVec2& view_size,
             const ImVec2& position,
