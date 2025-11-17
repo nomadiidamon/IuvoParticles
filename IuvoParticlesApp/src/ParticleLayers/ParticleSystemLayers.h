@@ -1,7 +1,8 @@
 #pragma once
 #include "Walnut/Application.h"
 #include "Walnut/Image.h"
-#include "RectParticle.h"
+#include "../Particles/RectParticle/RectParticleUtils.h"
+#include "../Particles/RectParticleSystem/RectParticleEmitter.h"
 #include <fstream>
 
 namespace Particles {
@@ -477,7 +478,7 @@ namespace Particles {
 				p_layer->defaultParticle = defaultParticle;
 				p_layer->useDefaultParticle = useDefaultParticle;
 				p_layer->rp_emitter = RectParticleEmitter(p_layer->view_size, &p_layer->defaultParticle, &p_layer->defaultParticle);
-				p_layer->rp_emitter.emissionMode = EMIT_CONTINUOUS_DEFAULT;
+				p_layer->rp_emitter.emissionMode = EmissionMode::EMIT_CONTINUOUS_DEFAULT;
 			}
 		}
 

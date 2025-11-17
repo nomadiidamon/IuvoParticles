@@ -1,7 +1,7 @@
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Image.h"
-#include "ParticleSystemLayers.h"
+#include "ParticleLayers/ParticleSystemLayers.h"
 
 class ExampleLayer : public Walnut::Layer
 {
