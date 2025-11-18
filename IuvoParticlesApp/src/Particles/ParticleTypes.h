@@ -38,10 +38,11 @@ namespace Particles {
 		ImVec2 p_position = ImVec2(0.0f, 0.0f);
 		ImVec2 p_center = ImVec2(0.0f, 0.0f);
 
-		ImVec2 p_size = ImVec2(50.0f, 50.0f);
-		ImVec2 p_baseSize = ImVec2(50.0f, 50.0f); // store base size to compute non-destructive scaling each frame
-		ImVec2 p_rotation = ImVec2(0.0f, 0.0f); // using x as angle in degrees for 2D rotation
+		ImVec2 p_size = ImVec2(10.0f, 10.0f);
+		ImVec2 p_baseSize = ImVec2(10.0f, 10.0f); // store base size to compute non-destructive scaling each frame
+		ImVec2 p_rotation = ImVec2(67.0f, 0.0f); // using x as angle in degrees for 2D rotation
 
+		/// TODO: reevaluate these randomization flags
 		bool p_randomPosition = false;
 		bool p_randomSize = false;
 		bool p_randomRotation = false;
@@ -51,16 +52,15 @@ namespace Particles {
 
 
 	struct ParticleAnimation2D {
-		ImVec2 p_velocity = ImVec2(-3.0f, -4.0f);
+		ImVec2 p_velocity = ImVec2(-3.0f, -1.5f);
 
 		float p_movementSpeed = 85.5f;
-		float p_rotationSpeed = 49.67f; // degrees per second
+		float p_rotationSpeed = 149.67f; // degrees per second
 		float p_scaleSpeed = 0.35f;
 
 		bool canMove = true;
 		bool canRotate = true;
 		bool canScale = false;
-
 
 		static const ParticleAnimation2D DEFAULT_ANIMATION;
 	};

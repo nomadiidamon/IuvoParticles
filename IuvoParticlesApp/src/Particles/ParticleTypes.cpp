@@ -6,10 +6,11 @@ namespace Particles {
 
 #pragma region ParticleColor Definitions
 	const ParticleColor ParticleColor::DEFAULT_COLOR = ParticleColor{};
+
 	const ParticleColor ParticleColor::RED_TO_YELLOW_FADE_OUT = ParticleColor{
 		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // startColor (Red)
 		ImVec4(1.0f, 1.0f, 0.0f, 0.0f), // endColor (Yellow, fully transparent)
-		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // currColor
+		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // currColor (default to start color)
 		true,                           // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha
@@ -18,7 +19,7 @@ namespace Particles {
 	const ParticleColor ParticleColor::RED_TO_TRANSPARENT_FADE_OUT = ParticleColor{
 		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // startColor (Red)
 		ImVec4(1.0f, 0.0f, 0.0f, 0.0f), // endColor (Red, fully transparent)
-		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // currColor
+		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // currColor  (default to start color)
 		true,                          // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha
@@ -27,7 +28,7 @@ namespace Particles {
 	const ParticleColor ParticleColor::YELLOW_TO_GREEN_FADE_OUT = ParticleColor{
 		ImVec4(1.0f, 1.0f, 0.0f, 1.0f), // startColor (Yellow)
 		ImVec4(0.0f, 1.0f, 0.0f, 0.0f), // endColor (Green, fully transparent)
-		ImVec4(1.0f, 1.0f, 0.0f, 1.0f), // currColor
+		ImVec4(1.0f, 1.0f, 0.0f, 1.0f), // currColor  (default to start color)
 		true,                           // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha
@@ -36,8 +37,8 @@ namespace Particles {
 	const ParticleColor ParticleColor::YELLOW_TO_TRANSPARENT_FADE_OUT = ParticleColor{
 		ImVec4(1.0f, 1.0f, 0.0f, 1.0f), // startColor (Yellow)
 		ImVec4(1.0f, 1.0f, 0.0f, 0.0f), // endColor (Yellow, fully transparent)
-		ImVec4(1.0f, 1.0f, 0.0f, 1.0f), // currColor
-		true,                          // lerpColor
+		ImVec4(1.0f, 1.0f, 0.0f, 1.0f), // currColor (default to start color)
+		true,                           // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha
 		false                           // randomizeColor
@@ -45,7 +46,7 @@ namespace Particles {
 	const ParticleColor ParticleColor::BLUE_TO_CYAN_FADE_OUT = ParticleColor{
 		ImVec4(0.0f, 0.0f, 1.0f, 1.0f), // startColor (Blue)
 		ImVec4(0.0f, 1.0f, 1.0f, 0.0f), // endColor (Cyan, fully transparent)
-		ImVec4(0.0f, 0.0f, 1.0f, 1.0f), // currColor
+		ImVec4(0.0f, 0.0f, 1.0f, 1.0f), // currColor (default to start color)
 		true,                           // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha
@@ -54,7 +55,7 @@ namespace Particles {
 	const ParticleColor ParticleColor::BLUE_TO_TRANSPARENT_FADE_OUT = ParticleColor{
 		ImVec4(0.0f, 0.0f, 1.0f, 1.0f), // startColor (Blue)
 		ImVec4(0.0f, 0.0f, 1.0f, 0.0f), // endColor (Blue, fully transparent)
-		ImVec4(0.0f, 0.0f, 1.0f, 1.0f), // currColor
+		ImVec4(0.0f, 0.0f, 1.0f, 1.0f), // currColor (default to start color)
 		true,                          // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha

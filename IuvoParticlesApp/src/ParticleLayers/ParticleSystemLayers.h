@@ -413,7 +413,7 @@ namespace Particles {
 		RectParticle defaultParticle;
 		BackgroundParticle defaultBackground;
 		bool useDefaultParticle = true;
-		RectParticlePreset preset = RectParticlePreset::RED_TO_YELLOW_FADE;
+		RectParticlePreset preset = RectParticlePreset::RED_TO_YELLOW_FADE_OUT;
 
 		IMGUI_2D_PARTICLE_LAYER* p_layer = nullptr;
 		bool is_active = false;
@@ -466,7 +466,10 @@ namespace Particles {
 		}
 
 		void ApplyColorPreset(const RectParticle& presetData) {
-			defaultParticle.rp_colorData = presetData.rp_colorData;
+			defaultParticle.rp_colorData.p_startColor = presetData.rp_colorData.p_startColor;
+			defaultParticle.rp_colorData.p_endColor = presetData.rp_colorData.p_endColor;
+			defaultParticle.rp_colorData.p_lerpSpeed = presetData.rp_colorData.p_lerpSpeed;
+			defaultParticle.rp_colorData.p_lerpColor = presetData.rp_colorData.p_lerpColor;	
 			p_layer->defaultParticle = defaultParticle;
 		}
 
@@ -475,6 +478,7 @@ namespace Particles {
 				return;
 
 			p_layer->defaultParticle = defaultParticle;
+			p_layer->bg_particle = defaultBackground;
 			p_layer->useDefaultParticle = useDefaultParticle;
 
 			ImGui::Begin("2D Particle Details");
@@ -590,22 +594,22 @@ namespace Particles {
 				if (ImGui::TreeNode("Color")) {
 					if (ImGui::Combo("Color Preset", (int*)&preset, "None\0Red to Yellow Fade\0Red to Transparent Fade\0Yellow to Green Fade\0Yellow to Transparent Fade\0Blue to Cyan Fade\0Blue to Transparent Fade\0\0")) {
 						switch (preset) {
-						case RectParticlePreset::RED_TO_YELLOW_FADE:
+						case RectParticlePreset::RED_TO_YELLOW_FADE_OUT:
 							ApplyColorPreset(RED_TO_YELLOW_FADE_OUT);
 							break;
-						case RectParticlePreset::RED_TO_TRANSPARENT_FADE:
+						case RectParticlePreset::RED_TO_TRANSPARENT_FADE_OUT:
 							ApplyColorPreset(RED_TO_TRANSPARENT_FADE_OUT);
 							break;
-						case RectParticlePreset::YELLOW_TO_GREEN_FADE:
+						case RectParticlePreset::YELLOW_TO_GREEN_FADE_OUT:
 							ApplyColorPreset(YELLOW_TO_GREEN_FADE_OUT);
 							break;
-						case RectParticlePreset::YELLOW_TO_TRANSPARENT_FADE:
+						case RectParticlePreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
 							ApplyColorPreset(YELLOW_TO_TRANSPARENT_FADE_OUT);
 							break;
-						case RectParticlePreset::BLUE_TO_CYAN_FADE:
+						case RectParticlePreset::BLUE_TO_CYAN_FADE_OUT:
 							ApplyColorPreset(BLUE_TO_CYAN_FADE_OUT);
 							break;
-						case RectParticlePreset::BLUE_TO_TRANSPARENT_FADE:
+						case RectParticlePreset::BLUE_TO_TRANSPARENT_FADE_OUT:
 							ApplyColorPreset(BLUE_TO_TRANSPARENT_FADE_OUT);
 							break;
 						case RectParticlePreset::NONE:
