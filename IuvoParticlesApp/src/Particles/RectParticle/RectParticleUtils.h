@@ -1,8 +1,5 @@
 #pragma once
-#include "RectParticle.h"
 #include "RectParticleController.h"
-#include "../ParticleConfig.h"
-#include "../ParticleRandom.h"
 
 namespace Particles {
 
@@ -153,6 +150,23 @@ namespace Particles {
                 p_transform.p_position.y + p_transform.p_size.y * 0.5f);
             return particle;
         }
+
+		static RectParticle CreateParticle(const ParticleTransform& p_transform,
+			const ParticleAnimation2D& p_animation,
+			const ParticleColor& p_color,
+			const ParticleLifetime& p_lifetime) {
+			RectParticle particle;
+			particle.rp_transform = p_transform;
+			if (particle.rp_transform.p_baseSize.x <= 0.0f || particle.rp_transform.p_baseSize.y <= 0.0f)
+				particle.rp_transform.p_baseSize = particle.rp_transform.p_size;
+			particle.rp_animation = p_animation;
+			particle.rp_colorData = p_color;
+			particle.rp_colorData.p_currColor = p_color.p_startColor;
+			particle.rp_lifetimeData = p_lifetime;
+			particle.rp_transform.p_center = ImVec2(p_transform.p_position.x + p_transform.p_size.x * 0.5f,
+				p_transform.p_position.y + p_transform.p_size.y * 0.5f);
+			return particle;
+		}
 
 		static void CreateRadialParticleBurst(const ImVec2& viewSize, const ImVec2 burstPos, int burstCount,
             std::vector<RectParticle>& container, const RectParticle* templateParticle = nullptr)

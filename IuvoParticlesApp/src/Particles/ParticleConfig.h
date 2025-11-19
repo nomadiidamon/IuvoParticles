@@ -1,5 +1,4 @@
 #pragma once
-#include "ParticleTypes.h"
 #include "RectParticle/RectParticle.h"
 
 namespace Particles {

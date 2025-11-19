@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ParticleTypes.h"
+#include "ParticleRandom.h"
+#include "ParticleConfig.h"
 
 namespace Particles {
 
@@ -61,6 +63,8 @@ namespace Particles {
 		true,                           // useAlpha
 		false                           // randomizeColor
 	};
+
+
 #pragma endregion
 
 	const ParticleLifetime ParticleLifetime::DEFAULT_LIFETIME = ParticleLifetime{};

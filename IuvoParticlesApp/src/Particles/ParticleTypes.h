@@ -12,7 +12,7 @@ namespace Particles {
 		bool p_fadeColor = true;
 		bool p_useAlpha = true;
 		bool p_randomizeColor = false;
-		
+
 		static const ParticleColor DEFAULT_COLOR;
 
 		static const ParticleColor RED_TO_YELLOW_FADE_OUT;
@@ -21,6 +21,7 @@ namespace Particles {
 		static const ParticleColor YELLOW_TO_TRANSPARENT_FADE_OUT;
 		static const ParticleColor BLUE_TO_CYAN_FADE_OUT;
 		static const ParticleColor BLUE_TO_TRANSPARENT_FADE_OUT;
+		static const ParticleColor RANDOM_COLOR;
 	};
 
 
@@ -31,6 +32,7 @@ namespace Particles {
 		bool p_loop = false;
 
 		static const ParticleLifetime DEFAULT_LIFETIME;
+		static const ParticleLifetime RANDOM_LIFETIME;
 	};
 
 
@@ -48,6 +50,7 @@ namespace Particles {
 		bool p_randomRotation = false;
 
 		static const ParticleTransform DEFAULT_TRANSFORM;
+		static const ParticleTransform RANDOM_TRANSFORM;
 	};
 
 
@@ -63,6 +66,7 @@ namespace Particles {
 		bool canScale = false;
 
 		static const ParticleAnimation2D DEFAULT_ANIMATION;
+		static const ParticleAnimation2D RANDOM_ANIMATION;
 	};
 
 

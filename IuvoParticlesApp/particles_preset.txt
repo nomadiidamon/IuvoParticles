@@ -1,0 +1,8 @@
+useDefaultParticle 1
+default_count 100
+max_count 10000
+hover_count 25
+hover_interval 0.05
+gravity 0 200
+drag 0.1
+start_color 1 0.448399 0 1

@@ -1,5 +1,5 @@
 #pragma once
-#include "RectParticle.h"
+#include "../ParticleRandom.h"
 #include "../ParticleConfig.h"
 
 namespace Particles {
@@ -47,7 +47,7 @@ namespace Particles {
 		}
 
 		void ApplyScale(float ts) {
-			const auto cfg = GetParticleConfig();
+			ParticleConfig& cfg = GetParticleConfig();
 			float scaleOscillation = cfg.scaleSpeedDefault;
 			particle.rp_transform.p_size.x = particle.rp_transform.p_baseSize.x * scaleOscillation;
 			particle.rp_transform.p_size.y = particle.rp_transform.p_baseSize.y * scaleOscillation;
@@ -269,7 +269,7 @@ namespace Particles {
 
 		static RectParticle CreateRandomInternal(const ImVec2& view_size, const RectParticle* templateParticle) {
 			RectParticle particle;
-			const auto& cfg = GetParticleConfig();
+			auto& cfg = GetParticleConfig();
 			if (templateParticle) {
 				particle.rp_transform.p_randomSize = templateParticle->rp_transform.p_randomSize;
 				particle.rp_transform.p_randomRotation = templateParticle->rp_transform.p_randomRotation;
@@ -282,6 +282,7 @@ namespace Particles {
 			else
 			{
 				// use the config defaults
+				//particle = cfg.RandomParticle_CONFIG();
 			}
 
 
