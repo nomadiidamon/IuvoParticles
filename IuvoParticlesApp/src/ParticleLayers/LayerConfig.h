@@ -8,7 +8,7 @@ namespace Particles {
     {
         // Particle pool sizes
         int defaultParticleCount = 100;
-        int maxParticleCount = 2000;
+        int maxParticleCount = 20000;
 		int currentParticleCount = 0;
 
         // Hover / click
@@ -41,8 +41,11 @@ namespace Particles {
         // Templates
         RectParticle defaultParticle;
         BackgroundParticle backgroundParticle;
-        RectParticlePreset preset = RectParticlePreset::RED_TO_YELLOW_FADE_OUT;
-
+		ParticleAnimation2DPreset animationPreset = ParticleAnimation2DPreset::NONE;
+		ParticleColorPreset colorPreset = ParticleColorPreset::RED_TO_YELLOW_FADE_OUT;
+		ParticleLifetimePreset lifetimePreset = ParticleLifetimePreset::MEDIUM_BURST;
+		ParticleTransformPreset transformPreset = ParticleTransformPreset::NONE;
+		RectParticlePreset rectParticlePreset = RectParticlePreset::NONE;
     };
 
     // Global config instance

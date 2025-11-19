@@ -4,42 +4,48 @@
 namespace Particles {
 
     struct ParticleConfig {
+        /// Transform
+        // Position fallback (center)
+        ImVec2 defaultEmitterPosition = ImVec2(150.0f, 150.0f);
         // Size ranges for randomized size (sx, sy)
         ImVec2 randomSizeMin = ImVec2(5.0f, 5.0f);
         ImVec2 randomSizeMax = ImVec2(20.0f, 20.0f);
-
         // Fallback base-size when none supplied
         ImVec2 defaultBaseSize = ImVec2(10.0f, 10.0f);
         ImVec2 defaultSpawnSize = ImVec2(10.0f, 10.0f);
 
-        // Position fallback (center)
-        ImVec2 defaultEmitterPosition = ImVec2(150.0f, 150.0f);
-
+		/// Animation
         // Rotation ranges (degrees)
         float rotationMin = 0.0f;
         float rotationMax = 360.0f;
-
         // Movement speed range (units/sec)
         float movementSpeedMin = 0.0f;
         float movementSpeedMax = 100.0f;
-
         // Rotation speed range (degrees/sec)
         float rotationSpeedMin = -90.0f;
         float rotationSpeedMax = 90.0f;
-
         // Scale speed default (used by scaling math)
         float scaleSpeedDefault = 0.35f;
+		float scaleSpeedMin = 0.1f;
+		float scaleSpeedMax = 1.0f;
+		// Velocity ranges (units/sec)
+		ImVec2 velocityMin = ImVec2(-50.0f, -50.0f);
+		ImVec2 velocityMax = ImVec2(50.0f, 50.0f);
 
+        /// Lifetime
         // Lifetime ranges (seconds)
         float lifetimeMin = 1.0f;
         float lifetimeMax = 4.0f;
         float lifetimeRandomMin = 0.5f;
         float lifetimeRandomMax = 4.0f;
 
+        /// Color
         // Color randomization defaults (0..1)
         ImVec4 defaultStartColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
         ImVec4 defaultEndColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
         ImVec4 defaultCurrColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+        ImVec4 startColorMin = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+        ImVec4 endColorMin = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
         // Default movement/behavior
         ImVec2 defaultVelocity = ImVec2(0.0f, -1.0f);

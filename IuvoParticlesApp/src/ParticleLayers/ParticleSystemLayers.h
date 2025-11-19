@@ -46,6 +46,7 @@ namespace Particles {
 				else {
 					p = RectParticleUtils::CreateRandomParticle(l_cfg.view_size);
 				}
+				p.rp_transform.p_position = pos;
 				particles.push_back(std::move(p));
 			}
 		}
@@ -62,7 +63,7 @@ namespace Particles {
 				l_cfg.hoverBurstTimer += ts;
 				if (l_cfg.hoverBurstTimer >= l_cfg.hoverBurstInterval) {
 					l_cfg.hoverBurstTimer = 0.0f;
-					//EmitAt(mouse_pos, hoverBurstCount);
+					EmitAt(l_cfg.mouse_pos, l_cfg.hoverBurstCount);
 				}
 			}
 		}
@@ -201,8 +202,8 @@ namespace Particles {
 						ImGui::OpenPopup("viewport_context");
 					}
 					if (ImGui::BeginPopup("viewport_context")) {
-						if (ImGui::MenuItem("Emit 10 at cursor")) {/* EmitAt(mouse_pos, 10);*/ }
-						if (ImGui::MenuItem("Emit 100 at cursor")) { /*EmitAt(mouse_pos, 100);*/ }
+						if (ImGui::MenuItem("Emit 10 at cursor")) { EmitAt(l_cfg.mouse_pos, 10); }
+						if (ImGui::MenuItem("Emit 100 at cursor")) { EmitAt(l_cfg.mouse_pos, 100); }
 						if (ImGui::MenuItem("Clear Particles")) { ClearParticles(); }
 						ImGui::EndPopup();
 					}
@@ -276,6 +277,8 @@ namespace Particles {
 				//}
 			}
 
+			l_cfg.backgroundParticle.bg_colorData.p_startColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+			l_cfg.backgroundParticle.bg_colorData.p_endColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 			initialized = true;
 
 		}
@@ -424,11 +427,41 @@ namespace Particles {
 			}
 		}
 
-		void ApplyColorPreset(const RectParticle& presetData) {
-			l_cfg.defaultParticle.rp_colorData.p_startColor = presetData.rp_colorData.p_startColor;
-			l_cfg.defaultParticle.rp_colorData.p_endColor = presetData.rp_colorData.p_endColor;
-			l_cfg.defaultParticle.rp_colorData.p_lerpSpeed = presetData.rp_colorData.p_lerpSpeed;
-			l_cfg.defaultParticle.rp_colorData.p_lerpColor = presetData.rp_colorData.p_lerpColor;
+		void ApplyColorPreset(const ParticleColor& presetData) {
+			l_cfg.defaultParticle.rp_colorData.p_startColor = presetData.p_startColor;
+			l_cfg.defaultParticle.rp_colorData.p_endColor = presetData.p_endColor;
+			l_cfg.defaultParticle.rp_colorData.p_lerpSpeed = presetData.p_lerpSpeed;
+			l_cfg.defaultParticle.rp_colorData.p_lerpColor = presetData.p_lerpColor;
+		}
+
+		void ApplyLifetimePreset(const ParticleLifetime& presetData) {
+			l_cfg.defaultParticle.rp_lifetimeData.p_maxLifetime = presetData.p_maxLifetime;
+			l_cfg.defaultParticle.rp_lifetimeData.p_randomizeLifetime = presetData.p_randomizeLifetime;
+		}
+
+		void ApplyTransformPreset(const ParticleTransform& presetData) {
+			//l_cfg.defaultParticle.rp_transform.p_position = presetData.p_position;
+			l_cfg.defaultParticle.rp_transform.p_size = presetData.p_size;
+			l_cfg.defaultParticle.rp_transform.p_randomSize = presetData.p_randomSize;
+			l_cfg.defaultParticle.rp_transform.p_randomRotation = presetData.p_randomRotation;
+			l_cfg.defaultParticle.rp_transform.p_rotation = presetData.p_rotation;
+		}
+
+		void ApplyAnimationPreset(const ParticleAnimation2D& presetData) {
+			l_cfg.defaultParticle.rp_animation.p_velocity = presetData.p_velocity;
+			l_cfg.defaultParticle.rp_animation.p_movementSpeed = presetData.p_movementSpeed;
+			l_cfg.defaultParticle.rp_animation.p_rotationSpeed = presetData.p_rotationSpeed;
+			l_cfg.defaultParticle.rp_animation.p_scaleSpeed = presetData.p_scaleSpeed;
+			l_cfg.defaultParticle.rp_animation.canMove = presetData.canMove;
+			l_cfg.defaultParticle.rp_animation.canRotate = presetData.canRotate;
+			l_cfg.defaultParticle.rp_animation.canScale = presetData.canScale;
+		}
+
+		void ApplyParticlePreset(const RectParticle& presetData) {
+			ApplyTransformPreset(presetData.rp_transform);
+			ApplyColorPreset(presetData.rp_colorData);
+			ApplyLifetimePreset(presetData.rp_lifetimeData);
+			ApplyAnimationPreset(presetData.rp_animation);
 		}
 
 		virtual void OnUIRender() override {
@@ -480,11 +513,8 @@ namespace Particles {
 				// Particle counts
 				ImGui::DragInt("Default Particle Count", &l_cfg.defaultParticleCount, 1, 0, 5000);
 				ImGui::DragInt("Max Particle Count (layer)", &l_cfg.maxParticleCount, 1, 0, 10000);
-
 				ImGui::Separator();
 
-
-				// Hover/click controls
 				if (ImGui::TreeNode("Hover & Click")) {
 					ImGui::Checkbox("Emit On Hover", &l_cfg.emitOnHover);
 					ImGui::DragInt("Hover Burst Count", &l_cfg.hoverBurstCount, 1, 0, 1000);
@@ -516,6 +546,50 @@ namespace Particles {
 				if (ImGui::Button("Save As Layer Default")) {
 
 				}
+				if (ImGui::Combo("Full Particle Presets", (int*)&l_cfg.rectParticlePreset, "None\0Red To Yellow Fade\0Red To Transparent Fade\0Yellow To Green Fade\0Yellow To Transparent Fade\0Blue To Cyan Fade\0Blue To Transparent Fade\0Fire Fade\0Smoke Puff\0Spark Ember\0Explosion Debris\0Rainbow Cycle\0Rain Streak\0\0")) {
+					switch (l_cfg.rectParticlePreset) {
+					case RectParticlePreset::RED_TO_YELLOW_FADE_OUT:
+						ApplyParticlePreset(RED_TO_YELLOW_FADE_OUT);
+						break;
+					case RectParticlePreset::RED_TO_TRANSPARENT_FADE_OUT:
+						ApplyParticlePreset(RED_TO_TRANSPARENT_FADE_OUT);
+						break;
+					case RectParticlePreset::YELLOW_TO_GREEN_FADE_OUT:
+						ApplyParticlePreset(YELLOW_TO_GREEN_FADE_OUT);
+						break;
+					case RectParticlePreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
+						ApplyParticlePreset(YELLOW_TO_TRANSPARENT_FADE_OUT);
+						break;
+					case RectParticlePreset::BLUE_TO_CYAN_FADE_OUT:
+						ApplyParticlePreset(BLUE_TO_CYAN_FADE_OUT);
+						break;
+					case RectParticlePreset::BLUE_TO_TRANSPARENT_FADE_OUT:
+						ApplyParticlePreset(BLUE_TO_TRANSPARENT_FADE_OUT);
+						break;
+					case RectParticlePreset::FIRE_FADE_OUT:
+						ApplyParticlePreset(FIRE_FADE_OUT);
+						break;
+					case RectParticlePreset::SMOKE_PUFF:
+						ApplyParticlePreset(SMOKE_PUFF);
+						break;
+					case RectParticlePreset::SPARK_EMBER:
+						ApplyParticlePreset(SPARK_EMBER);
+						break;
+					case RectParticlePreset::EXPLOSION_DEBRIS:
+						ApplyParticlePreset(EXPLOSION_DEBRIS);
+						break;
+					case RectParticlePreset::RAINBOW_CYCLE:
+						ApplyParticlePreset(RAINBOW_CYCLE);
+						break;
+					case RectParticlePreset::RAIN_STREAK:
+						ApplyParticlePreset(RAIN_STREAK);
+						break;
+					case RectParticlePreset::NONE:
+					default:
+						// do nothing
+						break;
+					}
+				}
 				ImGui::Separator();
 
 				if (ImGui::TreeNode("Transform")) {
@@ -523,6 +597,21 @@ namespace Particles {
 					{
 						l_cfg.defaultParticle.rp_transform.p_position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
 					}
+					if (ImGui::Combo("Transform Preset", (int*)&l_cfg.transformPreset, "None\0Small Floating\0Explosion Chunks\0\0")) {
+						switch (l_cfg.transformPreset) {
+						case ParticleTransformPreset::SMALL_FLOATING:
+							ApplyTransformPreset(ParticleTransform::SMALL_FLOATING);
+							break;
+						case ParticleTransformPreset::EXPLOSION_CHUNK:
+							ApplyTransformPreset(ParticleTransform::EXPLOSION_CHUNK);
+							break;
+						case ParticleTransformPreset::NONE:
+						default:
+							// do nothing
+							break;
+						}
+					}
+
 					ImGui::DragFloat2("Position", (float*)&l_cfg.defaultParticle.rp_transform.p_position, l_cfg.drag, 0.0f, l_cfg.view_size.x);
 					ImGui::DragFloat2("Size", (float*)&l_cfg.defaultParticle.rp_transform.p_size, l_cfg.drag, 1.0f, l_cfg.view_size.x);
 					ImGui::Checkbox("Random Size", &l_cfg.defaultParticle.rp_transform.p_randomSize);
@@ -532,6 +621,29 @@ namespace Particles {
 				}
 
 				if (ImGui::TreeNode("Animation")) {
+					if (ImGui::Combo("Animation Preset", (int*) &l_cfg.animationPreset, "None\0Small Rising\0Explosion\0Drifting\0Spinning\0Lightweight Drifting\0\0")) {
+						switch (l_cfg.animationPreset) {
+						case ParticleAnimation2DPreset::SMALL_RISING:
+							ApplyAnimationPreset(ParticleAnimation2D::SMALL_RISING);
+							break;
+						case ParticleAnimation2DPreset::EXPLOSION:
+							ApplyAnimationPreset(ParticleAnimation2D::EXPLOSION);
+							break;
+						case ParticleAnimation2DPreset::DRIFTING:
+							ApplyAnimationPreset(ParticleAnimation2D::DRIFTING);
+							break;
+						case ParticleAnimation2DPreset::SPINNING:
+							ApplyAnimationPreset(ParticleAnimation2D::SPINNING);
+							break;
+						case ParticleAnimation2DPreset::LIGHTWIEGHT_DRIFT:
+							ApplyAnimationPreset(ParticleAnimation2D::LIGHTWIEGHT_DRIFT);
+							break;
+						case ParticleAnimation2DPreset::NONE:
+						default:
+							// do nothing
+							break;
+						}
+					}
 					ImGui::DragFloat2("Velocity Dir", (float*)&l_cfg.defaultParticle.rp_animation.p_velocity, l_cfg.drag, -10.0f, 10.0f);
 					ImGui::DragFloat("Speed", &l_cfg.defaultParticle.rp_animation.p_movementSpeed, l_cfg.drag, 0.0f, 2000.0f);
 					ImGui::Checkbox("Can Move", &l_cfg.defaultParticle.rp_animation.canMove);
@@ -541,27 +653,48 @@ namespace Particles {
 				}
 
 				if (ImGui::TreeNode("Color")) {
-					if (ImGui::Combo("Color Preset", (int*)&l_cfg.preset, "None\0Red to Yellow Fade\0Red to Transparent Fade\0Yellow to Green Fade\0Yellow to Transparent Fade\0Blue to Cyan Fade\0Blue to Transparent Fade\0\0")) {
-						switch (l_cfg.preset) {
-						case RectParticlePreset::RED_TO_YELLOW_FADE_OUT:
-							ApplyColorPreset(RED_TO_YELLOW_FADE_OUT);
+					if (ImGui::Combo("Color Preset", (int*)&l_cfg.colorPreset, "None\0Red to Yellow Fade\0Red to Blue Fade\0Red to Transparent Fade\0Orange to Yellow Fade\0Orange to Transparent Fade\0Yellow to Green Fade\0Yellow to Transparent Fade\0Blue to Cyan Fade\0Blue to Transparent Fade\0Fire Fade Out\0Ice Fade Out\0Toxic Fade Out\0Magic Purple Fade Out\0\0")) {
+						switch (l_cfg.colorPreset) {
+						case ParticleColorPreset::RED_TO_YELLOW_FADE_OUT:
+							ApplyColorPreset(ParticleColor::RED_TO_YELLOW_FADE_OUT);
 							break;
-						case RectParticlePreset::RED_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(RED_TO_TRANSPARENT_FADE_OUT);
+						case ParticleColorPreset::RED_TO_TRANSPARENT_FADE_OUT:
+							ApplyColorPreset(ParticleColor::RED_TO_TRANSPARENT_FADE_OUT);
 							break;
-						case RectParticlePreset::YELLOW_TO_GREEN_FADE_OUT:
-							ApplyColorPreset(YELLOW_TO_GREEN_FADE_OUT);
+						case ParticleColorPreset::RED_TO_BLUE_FADE_OUT:
+							ApplyColorPreset(ParticleColor::RED_TO_BLUE_FADE_OUT);
 							break;
-						case RectParticlePreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(YELLOW_TO_TRANSPARENT_FADE_OUT);
+						case ParticleColorPreset::ORANGE_TO_YELLOW_FADE_OUT:
+							ApplyColorPreset(ParticleColor::ORANGE_TO_YELLOW_FADE_OUT);
 							break;
-						case RectParticlePreset::BLUE_TO_CYAN_FADE_OUT:
-							ApplyColorPreset(BLUE_TO_CYAN_FADE_OUT);
+						case ParticleColorPreset::ORANGE_TO_TRANSPARENT_FADE_OUT:
+							ApplyColorPreset(ParticleColor::ORANGE_TO_TRANSPARENT_FADE_OUT);
 							break;
-						case RectParticlePreset::BLUE_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(BLUE_TO_TRANSPARENT_FADE_OUT);
+						case ParticleColorPreset::YELLOW_TO_GREEN_FADE_OUT:
+							ApplyColorPreset(ParticleColor::YELLOW_TO_GREEN_FADE_OUT);
 							break;
-						case RectParticlePreset::NONE:
+						case ParticleColorPreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
+							ApplyColorPreset(ParticleColor::YELLOW_TO_TRANSPARENT_FADE_OUT);
+							break;
+						case ParticleColorPreset::BLUE_TO_CYAN_FADE_OUT:
+							ApplyColorPreset(ParticleColor::RED_TO_YELLOW_FADE_OUT);
+							break;
+						case ParticleColorPreset::BLUE_TO_TRANSPARENT_FADE_OUT:
+							ApplyColorPreset(ParticleColor::RED_TO_YELLOW_FADE_OUT);
+							break;
+						case ParticleColorPreset::FIRE_FADE_OUT:
+							ApplyColorPreset(ParticleColor::FIRE_FADE_OUT);
+							break;
+						case ParticleColorPreset::ICE_FADE_OUT:
+							ApplyColorPreset(ParticleColor::ICE_FADE_OUT);
+							break;
+						case ParticleColorPreset::TOXIC_FADE_OUT:
+							ApplyColorPreset(ParticleColor::TOXIC_FADE_OUT);
+							break;
+						case ParticleColorPreset::MAGIC_PURPLE_FADE_OUT:
+							ApplyColorPreset(ParticleColor::MAGIC_PURPLE_FADE_OUT);
+							break;
+						case ParticleColorPreset::NONE:
 						default:
 							// do nothing
 							break;
@@ -576,6 +709,26 @@ namespace Particles {
 				}
 
 				if (ImGui::TreeNode("Lifetime")) {
+					if (ImGui::Combo("Lifetime Preset", (int*)&l_cfg.lifetimePreset, "None\0Short Burst\0Medium Burst\0Long Burst\0Long Floating\0\0")) {
+						switch (l_cfg.lifetimePreset) {
+						case ParticleLifetimePreset::SHORT_BURST:
+							ApplyLifetimePreset(ParticleLifetime::SHORT_BURST);
+							break;
+						case ParticleLifetimePreset::MEDIUM_BURST:
+							ApplyLifetimePreset(ParticleLifetime::MEDIUM_BURST);
+							break;
+						case ParticleLifetimePreset::LONG_BURST:
+							ApplyLifetimePreset(ParticleLifetime::LONG_BURST);
+							break;
+						case ParticleLifetimePreset::LONG_FLOATING:
+							ApplyLifetimePreset(ParticleLifetime::LONG_FLOATING);			
+							break;
+						case ParticleLifetimePreset::NONE:
+						default:
+							// do nothing
+							break;
+						}
+					}
 					ImGui::DragFloat("Max Lifetime", &l_cfg.defaultParticle.rp_lifetimeData.p_maxLifetime, 0.01f, 0.01f, 60.0f);
 					ImGui::Checkbox("Randomize Lifetime", &l_cfg.defaultParticle.rp_lifetimeData.p_randomizeLifetime);
 					ImGui::TreePop();
@@ -586,8 +739,6 @@ namespace Particles {
 
 			ImGui::Separator();
 			ImGui::Spacing();
-
-
 			ImGui::Separator();
 
 			// Physics / visual controls
@@ -596,7 +747,6 @@ namespace Particles {
 				ImGui::DragFloat("Drag (damping)", &l_cfg.drag, 0.01f, 0.0f, 5.0f);
 				ImGui::TreePop();
 			}
-
 			ImGui::Separator();
 
 
@@ -620,7 +770,7 @@ namespace Particles {
 
 			// Trigger a click event at the center of the viewport after readyTimer elapses
 			// ensures the particle pool is initialized
-			/// TODO: figure out cause of no auto emit on first run
+			/// TODO: figure out cause of no auto emit on first run. Shouldnt need trigger event
 			if (!startEventTriggered) {
 				readyTimer -= ts;
 				if (readyTimer <= 0.0f) {
@@ -628,6 +778,11 @@ namespace Particles {
 					l_cfg.wasClicked = true;
 					startEventTriggered = true;
 				}
+			}
+			
+			if (l_cfg.emitOnHover && l_cfg.isHovering) {
+				p_layer->EmitAt(l_cfg.mouse_pos, l_cfg.hoverBurstCount);
+
 			}
 		}
 	};
