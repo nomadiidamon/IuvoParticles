@@ -1,5 +1,6 @@
 #pragma once
 #include "../ParticleTypes.h"
+#include <string>
 
 namespace Particles {
 
@@ -10,6 +11,8 @@ namespace Particles {
 		ParticleLifetime rp_lifetimeData;
 		
 		static RectParticle RANDOM_PARTICLE();
+		static std::string ToString(const RectParticle& particle);
+		static RectParticle FromString(const std::string& str);
 	};
 
 	extern const RectParticle DEFAULT_RECT_PARTICLE;

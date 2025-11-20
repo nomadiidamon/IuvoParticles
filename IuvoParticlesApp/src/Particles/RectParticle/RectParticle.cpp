@@ -142,4 +142,14 @@ namespace Particles {
 			ParticleLifetime::CreateRandomLifetime()
 		};
 	}
+
+	std::string RectParticle::ToString(const RectParticle& particle) {
+		// Implementation to serialize RectParticle to string
+		return "";
+	}
+
+	RectParticle RectParticle::FromString(const std::string& str) {
+		// Implementation to deserialize RectParticle from string
+		return RectParticle{};
+	}
 }
