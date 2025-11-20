@@ -3,6 +3,7 @@
 #include "ParticleTypes.h"
 #include "ParticleRandom.h"
 #include "ParticleConfig.h"
+#include "ParticleUtils.h"
 
 namespace Particles {
 
@@ -40,9 +41,9 @@ namespace Particles {
 		return out;
 	}
 	const ParticleColor ParticleColor::RED_TO_YELLOW_FADE_OUT = ParticleColor{
-		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // startColor (Red)
-		ImVec4(1.0f, 1.0f, 0.0f, 0.0f), // endColor (Yellow, fully transparent)
-		ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // currColor (default to start color)
+		ColorRed(),
+		SetAlpha(ColorYellow()),
+		ColorRed(), 
 		true,                           // lerpColor
 		true,                           // fadeColor
 		true,                           // useAlpha
