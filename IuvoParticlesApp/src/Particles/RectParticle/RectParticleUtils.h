@@ -74,7 +74,7 @@ namespace Particles {
         {
             // If caller supplied a position, create a random particle but force that position.
             if (position.x != -FLT_MAX && position.y != -FLT_MAX) {
-                RectParticle p = RectParticleController::CreateRandomInternal(view_size, templateParticle);
+                RectParticle p = RectParticleSpawner::CreateRandom(view_size);
                 p.rp_transform.p_position = position;
                 p.rp_transform.p_center = ImVec2(position.x + p.rp_transform.p_size.x * 0.5f,
                     position.y + p.rp_transform.p_size.y * 0.5f);
@@ -82,7 +82,7 @@ namespace Particles {
             }
             else {
                 // no position supplied => return a particle with internally randomized position
-                return RectParticleController::CreateRandomInternal(view_size, templateParticle);
+                return RectParticleSpawner::CreateRandom(view_size);
             }
         }
 
@@ -92,7 +92,7 @@ namespace Particles {
             
             if (defaultParticle) {
                 if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
-                    out = RectParticleController::CreateFromTemplate(*defaultParticle);
+                    out = RectParticleSpawner::FromTemplate(*defaultParticle);
                     out.rp_transform.p_position = pos;
                     out.rp_transform.p_center = ImVec2(pos.x + out.rp_transform.p_size.x * 0.5f,
                         pos.y + out.rp_transform.p_size.y * 0.5f);
@@ -100,7 +100,7 @@ namespace Particles {
                 }
                 else {
                     // Use provided default template centered in the view
-                    out = RectParticleController::CreateFromTemplate(*defaultParticle);
+                    out = RectParticleSpawner::FromTemplate(*defaultParticle);
                     out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
                     // make sure center is synced
                     RectParticleController(out).UpdateCenter();
@@ -112,7 +112,7 @@ namespace Particles {
                 if (cfg.defaultSpawnTemplate.rp_transform.p_size.x > 0.0f && cfg.defaultSpawnTemplate.rp_transform.p_size.y > 0.0f) {
                     //return RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
                     if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
-                        out = RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
+                        out = RectParticleSpawner::FromTemplate(cfg.defaultSpawnTemplate);
                         out.rp_transform.p_position = pos;
 						RectParticleController(out).UpdateCenter();
                     }
@@ -221,7 +221,7 @@ namespace Particles {
         }
 
         static void CalculateRotatedRectCorners(const RectParticle& particle, ImVec2 outCorners[4]) {
-            RectParticleController::CalculateRotatedRectCorners(particle, outCorners);
+            RectParticleMotionController::ComputeRotatedCorners(particle, outCorners);
         }
 
         static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {

@@ -1,5 +1,6 @@
 #pragma once
 #include "RectParticle/RectParticle.h"
+#include "ParticleRandom.h"
 
 namespace Particles {
 
