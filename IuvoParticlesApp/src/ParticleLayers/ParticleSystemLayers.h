@@ -70,7 +70,7 @@ namespace Particles {
 
 		/// TODO: convert this function to a RectParticleUtils func
 		// Click handling — now uses EmitAt and velocity radial burst logic optionally
-		void HandleClick(float ts)
+		void HandleClick()
 		{
 			if (!l_cfg.wasClicked) return;
 
@@ -111,6 +111,8 @@ namespace Particles {
 
 				particles.push_back(std::move(p));
 			}
+
+
 			l_cfg.currentParticleCount = (int)particles.size();
 		}
 
@@ -232,13 +234,21 @@ namespace Particles {
 					ImGui::GetColorU32(l_cfg.backgroundParticle.bg_colorData.p_currColor));
 
 				// draw each particle (respecting rotation)
-				for (const auto& particle : particles) {
-					if (particle.rp_animation.canRotate) {
-						RectParticleUtils::DrawRotatingParticle(draw_list, particle, l_cfg.view_pos);
+				for (auto& particle : particles) {
+					if (l_cfg.randomizeEverything) {
+						auto& pos = particle.rp_transform.p_position;
+						particle = RectParticleUtils::CreateRandomParticle(l_cfg.view_size, pos);
+						RectParticleUtils::DrawParticleAgnostic(draw_list, particle, l_cfg.view_pos);
+						continue;
 					}
-					else {
-						RectParticleUtils::DrawParticle(draw_list, particle, l_cfg.view_pos);
-					}
+					//if (particle.rp_animation.canRotate) {
+					//	RectParticleUtils::DrawRotatingParticle(draw_list, particle, l_cfg.view_pos);
+					//}
+					//else {
+					//	RectParticleUtils::DrawParticle(draw_list, particle, l_cfg.view_pos);
+					//}
+					RectParticleUtils::DrawParticleAgnostic(draw_list, particle, l_cfg.view_pos);
+
 				}
 				RectParticleUtils::RestrictParticles(particles, l_cfg.maxParticleCount, l_cfg.view_size);
 			}
@@ -266,15 +276,6 @@ namespace Particles {
 				for (int i = 0; i < l_cfg.defaultParticleCount; ++i) {
 					particles.push_back(RectParticleUtils::CreateRandomParticle(l_cfg.view_size, l_cfg.defaultParticle.rp_transform.p_position));
 				}
-
-				//particles.reserve(GetLayerConfig().defaultParticleCount);
-				//for (int i = 0; i < l_cfg.defaultParticleCount; ++i) {
-				//	particles.push_back(RectParticleUtils::CreateParticle(
-				//		l_cfg.defaultParticle.rp_transform,
-				//		l_cfg.defaultParticle.rp_colorData,
-				//		l_cfg.defaultParticle.rp_lifetimeData
-				//	));
-				//}
 			}
 
 			l_cfg.backgroundParticle.bg_colorData.p_startColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -354,7 +355,7 @@ namespace Particles {
 				1.0f);
 
 			HandleHoverBurst(simTs);
-			HandleClick(simTs);
+			HandleClick();
 
 			// limit particles
 			RectParticleUtils::RestrictParticles(particles, l_cfg.maxParticleCount, l_cfg.view_size);
@@ -391,7 +392,7 @@ namespace Particles {
 
 			// Center of Viewport
 			l_cfg.defaultParticle.rp_transform.p_position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
-			p_cfg.defaultEmitterPosition = l_cfg.defaultParticle.rp_transform.p_position;
+			p_cfg.transform.defaultPosition = l_cfg.defaultParticle.rp_transform.p_position;
 			// Size 10x10
 			l_cfg.defaultParticle.rp_transform.p_size = ImVec2(10.0f, 10.0f);
 			// No Size Randomization
@@ -508,8 +509,23 @@ namespace Particles {
 					ImGui::Spacing();
 				}
 
+				if (ImGui::TreeNode("Global Particle Config")) {
+					if (ImGui::TreeNode("Physics")) {
+						ImGui::DragFloat2("Gravity", (float*)&l_cfg.gravity, 1.0f, -2000.0f, 2000.0f);
+						ImGui::DragFloat("Drag (damping)", &l_cfg.drag, 0.01f, 0.0f, 5.0f);
+						ImGui::TreePop();
+					}
+
+					if (ImGui::TreeNode("Transform Ranges")) {
+
+						ImGui::TreePop();
+					}
+					ImGui::TreePop();
+				}
+				ImGui::Separator();
+
 				// Speed multiplier
-				ImGui::DragFloat("Global Speed Multiplier", &l_cfg.globalSpeedMultiplier, 0.1f, 0.0f, 10.0f);
+				ImGui::DragFloat("Global Speed Multiplier", &l_cfg.globalSpeedMultiplier, 0.1f, 0.0f, 20.0f);
 
 				// Particle counts
 				ImGui::DragInt("Default Particle Count", &l_cfg.defaultParticleCount, 1, 0, 5000);
@@ -522,7 +538,7 @@ namespace Particles {
 					ImGui::DragFloat("Hover Burst Interval", &l_cfg.hoverBurstInterval, 0.001f, 0.001f, 1.0f);
 					ImGui::Separator();
 					if (ImGui::Button("Emit 50 at center")) {
-						//p_layer->EmitAt(ImVec2(p_layer->view_size.x / 2.0f, p_layer->view_size.y / 2.0f), 50);
+						p_layer->EmitAt(ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f), 50);
 					}
 					ImGui::TreePop();
 				}
@@ -530,21 +546,12 @@ namespace Particles {
 
 			}
 
-
-			// set min size from properties window to fit default particle controls
-			ImVec2 propMin = ImVec2();
-			// get the length of all checkbox labels
-			propMin = ImGui::CalcTextSize("Random Size Random Rotation Use Default Particle", nullptr, true, 0.0f);
-
-
-			// make sure the default particle tree is always minimum size to fit all controls
-			ImGui::SetNextItemWidth(propMin.x + 50.0f);
 			if (ImGui::TreeNode("Default Particle")) {
 				if (ImGui::Checkbox("Use Default Particle", &l_cfg.useDefaultParticle)) {
 					SetupDefaultParticle();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Save As Layer Default")) {
+				if (ImGui::Checkbox("Randomize Everything", &l_cfg.randomizeEverything)) {
 
 				}
 				if (ImGui::Button("Random Default Particle")) {
@@ -555,9 +562,6 @@ namespace Particles {
 					l_cfg.defaultParticle.rp_colorData = ParticleColor::CreateRandomColor();
 					l_cfg.defaultParticle.rp_lifetimeData = ParticleLifetime::CreateRandomLifetime();
 				}
-				if (ImGui::Checkbox("Randomize Everything", &l_cfg.randomizeEverything)) {
-				}
-
 				if (ImGui::Combo("Full Particle Presets", (int*)&l_cfg.rectParticlePreset, "None\0Red To Yellow Fade\0Red To Transparent Fade\0Yellow To Green Fade\0Yellow To Transparent Fade\0Blue To Cyan Fade\0Blue To Transparent Fade\0Fire Fade\0Smoke Puff\0Spark Ember\0Explosion Debris\0Rainbow Cycle\0Rain Streak\0\0")) {
 					switch (l_cfg.rectParticlePreset) {
 					case RectParticlePreset::RED_TO_YELLOW_FADE_OUT:
@@ -675,6 +679,14 @@ namespace Particles {
 					if (ImGui::Button("Random Color")) {
 						l_cfg.defaultParticle.rp_colorData = ParticleColor::CreateRandomColor();
 					}
+					ImGui::SameLine();
+					if (ImGui::Button("Random Start Color")) {
+						l_cfg.defaultParticle.rp_colorData.p_startColor = ParticleColor::CreateRandomColor().p_startColor;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Random End Color")) {
+						l_cfg.defaultParticle.rp_colorData.p_endColor = ParticleColor::CreateRandomColor().p_endColor;
+					}
 					if (ImGui::Combo("Color Preset", (int*)&l_cfg.colorPreset, "None\0Red to Yellow Fade\0Red to Blue Fade\0Red to Transparent Fade\0Orange to Yellow Fade\0Orange to Transparent Fade\0Yellow to Green Fade\0Yellow to Transparent Fade\0Blue to Cyan Fade\0Blue to Transparent Fade\0Fire Fade Out\0Ice Fade Out\0Toxic Fade Out\0Magic Purple Fade Out\0\0")) {
 						switch (l_cfg.colorPreset) {
 						case ParticleColorPreset::RED_TO_YELLOW_FADE_OUT:
@@ -765,13 +777,6 @@ namespace Particles {
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::Separator();
-
-			// Physics / visual controls
-			if (ImGui::TreeNode("Physics & Visuals")) {
-				ImGui::DragFloat2("Gravity", (float*)&l_cfg.gravity, 1.0f, -2000.0f, 2000.0f);
-				ImGui::DragFloat("Drag (damping)", &l_cfg.drag, 0.01f, 0.0f, 5.0f);
-				ImGui::TreePop();
-			}
 			ImGui::Separator();
 
 
@@ -807,8 +812,8 @@ namespace Particles {
 			
 			if (l_cfg.emitOnHover && l_cfg.isHovering) {
 				p_layer->EmitAt(l_cfg.mouse_pos, l_cfg.hoverBurstCount);
-
 			}
+			
 		}
 	};
 

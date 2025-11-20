@@ -155,7 +155,7 @@ namespace Particles {
 
 		ParticleLifetime out = ParticleLifetime{
 			0.0f,
-			RandFloat(cfg.lifetimeMin, cfg.lifetimeMax),
+			RandFloat(cfg.lifetime.minMaxLifetime, cfg.lifetime.maxMaxLifetime),
 			false,
 			false
 		};
@@ -192,7 +192,7 @@ namespace Particles {
 	const ParticleTransform ParticleTransform::DEFAULT_TRANSFORM = ParticleTransform{};
 	ParticleTransform ParticleTransform::CreateRandomTransform() {
 		auto& cfg = GetParticleConfig();
-		ImVec2& _size = RandImVec2Float(cfg.randomSizeMin, cfg.randomSizeMax);
+		ImVec2& _size = RandImVec2Float(cfg.transform.randomSizeMin, cfg.transform.randomSizeMax);
 		ParticleTransform out = ParticleTransform{
 			ImVec2(
 				RandFloat(0.0f, cfg.defaultViewSize.x),
@@ -241,12 +241,12 @@ namespace Particles {
 		auto& cfg = GetParticleConfig();
 		ParticleAnimation2D out = ParticleAnimation2D{
 			ImVec2(
-				RandFloat(cfg.velocityMin.x, cfg.velocityMax.x),
-				RandFloat(cfg.velocityMin.y, cfg.velocityMax.y)
+				RandFloat(cfg.animation.minVelocity.x, cfg.animation.maxVelocity.x),
+				RandFloat(cfg.animation.minVelocity.y, cfg.animation.maxVelocity.y)
 			), // velocity
-			RandFloat(cfg.movementSpeedMin, cfg.movementSpeedMax), // movementSpeed
-			RandFloat(cfg.rotationSpeedMin, cfg.rotationSpeedMax), // rotationSpeed
-			RandFloat(cfg.scaleSpeedMin, cfg.scaleSpeedMax),       // scaleSpeed
+			RandFloat(cfg.animation.minMovementSpeed, cfg.animation.maxMovementSpeed), // movementSpeed
+			RandFloat(cfg.animation.minRotationSpeed, cfg.animation.maxRotationSpeed), // rotationSpeed
+			RandFloat(cfg.animation.minScaleSpeed, cfg.animation.maxScaleSpeed),       // scaleSpeed
 			true,  // canMove
 			true,  // canRotate
 			false  // canScale

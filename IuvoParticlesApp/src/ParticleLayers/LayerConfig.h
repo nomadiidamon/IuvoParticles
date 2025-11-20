@@ -27,6 +27,7 @@ namespace Particles {
         ImVec2 min_view_size = ImVec2(200, 200);
 
 
+
         // Runtime control
         bool paused = false;
         bool stepOnce = false;

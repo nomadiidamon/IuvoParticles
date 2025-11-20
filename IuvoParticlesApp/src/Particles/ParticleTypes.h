@@ -50,6 +50,24 @@ namespace Particles {
 		static ParticleColor CreateRandomColor();
 		static ParticleColor CreateRandomColorInRange(const ImVec4& minColor, const ImVec4& maxColor);
 	};
+	struct ParticleColorRange {
+		bool enforceConstraints = false;
+
+		ImVec4 startColorMin = ImVec4(0.1f, 0.1f, 0.1f, 0.1f);
+		ImVec4 startColorMax = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImVec4 defaultStartColor = ParticleColor::ICE_FADE_OUT.p_startColor;
+
+		ImVec4 endColorMin = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+		ImVec4 endColorMax = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+		ImVec4 defaultEndColor = ParticleColor::TOXIC_FADE_OUT.p_startColor;
+		ImVec4 defaultCurrColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+
+
+		float colorFadeSpeedMin = 0.01f;
+		float colorFadeSpeedMax = 2.0f;
+		float defaultColorFadeSpeed = 0.25f;
+		static const ParticleColorRange DEFAULT_COLOR_RANGE;
+	};
 
 	enum class ParticleLifetimePreset {
 		NONE,
@@ -63,6 +81,7 @@ namespace Particles {
 		float p_maxLifetime = 5.0f;
 		bool p_randomizeLifetime = false;
 		bool p_loop = false;
+		int p_loopCount = 0; // number of times the particle has looped
 
 		static const ParticleLifetime DEFAULT_LIFETIME;
 		static ParticleLifetime CreateRandomLifetime();
@@ -70,7 +89,18 @@ namespace Particles {
 		static const ParticleLifetime MEDIUM_BURST;
 		static const ParticleLifetime LONG_BURST;
 		static const ParticleLifetime LONG_FLOATING;
+	};
+	struct ParticleLifetimeRange {
+		bool enforceConstraints = false;
 
+		float minMaxLifetime = 1.0f;
+		float maxMaxLifetime = 10.0f;
+		float randomLifetimeMin = 1.0f;
+		float randomLifetimeMax = 10.0f;
+		float defaultMaxLifetime = 5.0f;
+		int minLoopCount = 0;
+		int maxLoopCount = 5;
+		static const ParticleLifetimeRange DEFAULT_LIFETIME_RANGE;
 	};
 
 	enum class ParticleTransformPreset {
@@ -96,6 +126,29 @@ namespace Particles {
 		static const ParticleTransform SMALL_FLOATING;
 		static const ParticleTransform EXPLOSION_CHUNK;
 
+	};
+	struct ParticleTransformRange {
+		bool enforceConstraints = false;
+
+		ImVec2 minPosition = ImVec2(0.0f, 0.0f);
+		ImVec2 maxPosition = ImVec2(100.0f, 100.0f);
+		ImVec2 randomPositionMin = ImVec2(0.0f, 0.0f);		
+		ImVec2 randomPositionMax = ImVec2(100.0f, 100.0f);  
+		ImVec2 defaultPosition = ImVec2(150.0f, 150.0f);
+
+		ImVec2 minSize = ImVec2(5.0f, 5.0f);
+		ImVec2 maxSize = ImVec2(20.0f, 20.0f);
+		ImVec2 randomSizeMin = ImVec2(5.0f, 5.0f);
+		ImVec2 randomSizeMax = ImVec2(20.0f, 20.0f);
+		ImVec2 defaultSize = ImVec2(10.0f, 10.0f);
+
+		ImVec2 minRotation = ImVec2(0.0f, 0.0f);
+		ImVec2 maxRotation = ImVec2(0.0f, 0.0f);
+		ImVec2 randomRotationMin = ImVec2(0.0f, 0.0f);
+		ImVec2 randomRotationMax = ImVec2(360.0f, 0.0f);
+		ImVec2 defaultRotation = ImVec2(0.0f, 0.0f);
+
+		static const ParticleTransformRange DEFAULT_TRANSFORM_RANGE;
 	};
 
 	enum class ParticleAnimation2DPreset {
@@ -125,6 +178,37 @@ namespace Particles {
 		static const ParticleAnimation2D SPINNING;
 		static const ParticleAnimation2D LIGHTWIEGHT_DRIFT;
 
+	};
+	struct ParticleAnimation2DRange {
+		bool enforceConstraints = false;
+
+		ImVec2 minVelocity = ImVec2(-5.0f, -5.0f);
+		ImVec2 maxVelocity = ImVec2(5.0f, 5.0f);
+		ImVec2 randomVelocityMin = ImVec2(-1.0f, -1.0f);
+		ImVec2 randomVelocityMax = ImVec2(1.0f, 1.0f);
+		ImVec2 defaultVelocity = ImVec2(0.0f, -1.0f);
+		float minVelocityMagnitude = 0.0f;
+		float maxVelocityMagnitude = 200.0f;
+
+		float minMovementSpeed = 20.0f;
+		float maxMovementSpeed = 200.0f;
+		float randomMovementSpeedMin = 20.0f;
+		float randomMovementSpeedMax = 200.0f;
+		float defaultMovementSpeed = 85.0f;
+
+		float minRotationSpeed = -360.0f;
+		float maxRotationSpeed = 360.0f;
+		float randomRotationSpeedMin = -180.0f;
+		float randomRotationSpeedMax = 180.0f;
+		float defaultRotationSpeed = 90.0f;
+
+		float minScaleSpeed = 0.0f;
+		float maxScaleSpeed = 1.0f;
+		float randomScaleSpeedMin = 0.0f;
+		float randomScaleSpeedMax = 1.0f;
+		float defaultScaleSpeed = 0.35f;
+
+		static const ParticleAnimation2DRange DEFAULT_ANIMATION_RANGE;
 	};
 
 

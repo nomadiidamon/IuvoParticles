@@ -1,6 +1,7 @@
 #pragma once
 #include "RectParticleLifetimeController.h"
 #include "../../ParticleRandom.h"
+#include "../../ParticleUtils.h"
 
 namespace Particles {
 	void RectParticleLifetimeController::UpdateLifetime(RectParticle& particle, float ts) {
