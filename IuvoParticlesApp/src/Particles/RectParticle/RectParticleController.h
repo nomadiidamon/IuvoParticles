@@ -9,10 +9,10 @@ namespace Particles {
 	public:
 		RectParticleController(RectParticle& p) : particle(p) {}
 
-		void Update(float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+		void Update(float ts, const ImVec2& view_size, std::vector<RectParticle>& container, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
 			float lifetimeRatio = 0.0f;
 			if (RectParticleLifetimeController::IsExpired(particle, lifetimeRatio)) {
-				Reset(view_size, useDefaultParticle, defaultParticle);
+				Reset(view_size, container, useDefaultParticle, defaultParticle);
 				return;
 			}
 
@@ -32,13 +32,22 @@ namespace Particles {
 			UpdateCenter();
 		}
 
-		void Reset(const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+		void Reset(const ImVec2& view_size, std::vector<RectParticle>& container, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+			// remove from container
+			auto it = std::find_if(container.begin(), container.end(),
+				[this](const RectParticle& p) { return &p == &particle; });
+			if (it != container.end()) {
+				container.erase(it);
+			}
+
 			if (useDefaultParticle && defaultParticle) {
 				particle = RectParticleSpawner::FromTemplate(*defaultParticle);
 				particle.rp_lifetimeData.p_lifetime = 0.0f;
+				container.push_back(particle);
 				return;
 			}
 			particle = RectParticleSpawner::CreateRandom(view_size);
+			container.push_back(particle);
 		}
 
 		void UpdateCenter() {

@@ -338,7 +338,7 @@ namespace Particles {
 					}
 				}
 				// call your utility that updates lifetime, transform, rotation, color etc.
-				RectParticleUtils::UpdateParticle(particle, simTs, l_cfg.view_size, l_cfg.useDefaultParticle, &l_cfg.defaultParticle);
+				RectParticleUtils::UpdateParticle(particle, simTs, l_cfg.view_size, particles, l_cfg.useDefaultParticle, &l_cfg.defaultParticle);
 			}
 
 			// background anim
@@ -699,10 +699,10 @@ namespace Particles {
 							ApplyColorPreset(ParticleColor::YELLOW_TO_TRANSPARENT_FADE_OUT);
 							break;
 						case ParticleColorPreset::BLUE_TO_CYAN_FADE_OUT:
-							ApplyColorPreset(ParticleColor::RED_TO_YELLOW_FADE_OUT);
+							ApplyColorPreset(ParticleColor::BLUE_TO_CYAN_FADE_OUT);
 							break;
 						case ParticleColorPreset::BLUE_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(ParticleColor::RED_TO_YELLOW_FADE_OUT);
+							ApplyColorPreset(ParticleColor::BLUE_TO_TRANSPARENT_FADE_OUT);
 							break;
 						case ParticleColorPreset::FIRE_FADE_OUT:
 							ApplyColorPreset(ParticleColor::FIRE_FADE_OUT);

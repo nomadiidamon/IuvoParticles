@@ -65,7 +65,7 @@ namespace Particles {
             system.viewSize = viewSize;
             Emit(dt);
             for (auto& p : system.activeParticles)
-                RectParticleUtils::UpdateParticle(p, dt, viewSize, false, &system.spawnParticle);
+                RectParticleUtils::UpdateParticle(p, dt, viewSize, system.activeParticles, system.useDefaultParticle, &system.spawnParticle);
             RectParticleUtils::RestrictParticles(system.activeParticles, system.maxParticles, viewSize);
         }
 

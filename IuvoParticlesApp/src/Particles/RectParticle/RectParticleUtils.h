@@ -224,8 +224,8 @@ namespace Particles {
             RectParticleMotionController::ComputeRotatedCorners(particle, outCorners);
         }
 
-        static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
-			RectParticleController(particle).Update(ts, view_size, useDefaultParticle, defaultParticle);
+        static void UpdateParticle(RectParticle& particle, float ts, const ImVec2& view_size, std::vector<RectParticle>& container, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+			RectParticleController(particle).Update(ts, view_size, container, useDefaultParticle, defaultParticle);
         }
 
 		static void DrawParticleAgnostic(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
