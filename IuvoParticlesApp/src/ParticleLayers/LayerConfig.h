@@ -32,6 +32,7 @@ namespace Particles {
         bool stepOnce = false;
         float globalSpeedMultiplier = 1.0f;
         bool useDefaultParticle = true;
+		bool randomizeEverything = false;
 
 
         // Physics

@@ -391,6 +391,7 @@ namespace Particles {
 
 			// Center of Viewport
 			l_cfg.defaultParticle.rp_transform.p_position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
+			p_cfg.defaultEmitterPosition = l_cfg.defaultParticle.rp_transform.p_position;
 			// Size 10x10
 			l_cfg.defaultParticle.rp_transform.p_size = ImVec2(10.0f, 10.0f);
 			// No Size Randomization
@@ -546,6 +547,17 @@ namespace Particles {
 				if (ImGui::Button("Save As Layer Default")) {
 
 				}
+				if (ImGui::Button("Random Default Particle")) {
+					auto pos = l_cfg.defaultParticle.rp_transform.p_position;
+					l_cfg.defaultParticle.rp_transform = ParticleTransform::CreateRandomTransform();
+					l_cfg.defaultParticle.rp_transform.p_position = pos;
+					l_cfg.defaultParticle.rp_animation = ParticleAnimation2D::CreateRandomAnimation2D();
+					l_cfg.defaultParticle.rp_colorData = ParticleColor::CreateRandomColor();
+					l_cfg.defaultParticle.rp_lifetimeData = ParticleLifetime::CreateRandomLifetime();
+				}
+				if (ImGui::Checkbox("Randomize Everything", &l_cfg.randomizeEverything)) {
+				}
+
 				if (ImGui::Combo("Full Particle Presets", (int*)&l_cfg.rectParticlePreset, "None\0Red To Yellow Fade\0Red To Transparent Fade\0Yellow To Green Fade\0Yellow To Transparent Fade\0Blue To Cyan Fade\0Blue To Transparent Fade\0Fire Fade\0Smoke Puff\0Spark Ember\0Explosion Debris\0Rainbow Cycle\0Rain Streak\0\0")) {
 					switch (l_cfg.rectParticlePreset) {
 					case RectParticlePreset::RED_TO_YELLOW_FADE_OUT:
@@ -593,6 +605,10 @@ namespace Particles {
 				ImGui::Separator();
 
 				if (ImGui::TreeNode("Transform")) {
+					if (ImGui::Button("Random Transform")) {
+						l_cfg.defaultParticle.rp_transform = ParticleTransform::CreateRandomTransform();
+					}
+					ImGui::SameLine();
 					if (ImGui::Button("Center in Viewport"))
 					{
 						l_cfg.defaultParticle.rp_transform.p_position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
@@ -621,6 +637,9 @@ namespace Particles {
 				}
 
 				if (ImGui::TreeNode("Animation")) {
+					if (ImGui::Button("Random Animation")) {
+						l_cfg.defaultParticle.rp_animation = ParticleAnimation2D::CreateRandomAnimation2D();
+					}
 					if (ImGui::Combo("Animation Preset", (int*) &l_cfg.animationPreset, "None\0Small Rising\0Explosion\0Drifting\0Spinning\0Lightweight Drifting\0\0")) {
 						switch (l_cfg.animationPreset) {
 						case ParticleAnimation2DPreset::SMALL_RISING:
@@ -653,6 +672,9 @@ namespace Particles {
 				}
 
 				if (ImGui::TreeNode("Color")) {
+					if (ImGui::Button("Random Color")) {
+						l_cfg.defaultParticle.rp_colorData = ParticleColor::CreateRandomColor();
+					}
 					if (ImGui::Combo("Color Preset", (int*)&l_cfg.colorPreset, "None\0Red to Yellow Fade\0Red to Blue Fade\0Red to Transparent Fade\0Orange to Yellow Fade\0Orange to Transparent Fade\0Yellow to Green Fade\0Yellow to Transparent Fade\0Blue to Cyan Fade\0Blue to Transparent Fade\0Fire Fade Out\0Ice Fade Out\0Toxic Fade Out\0Magic Purple Fade Out\0\0")) {
 						switch (l_cfg.colorPreset) {
 						case ParticleColorPreset::RED_TO_YELLOW_FADE_OUT:
@@ -709,6 +731,9 @@ namespace Particles {
 				}
 
 				if (ImGui::TreeNode("Lifetime")) {
+					if (ImGui::Button("Random Lifetime")) {
+						l_cfg.defaultParticle.rp_lifetimeData = ParticleLifetime::CreateRandomLifetime();
+					}
 					if (ImGui::Combo("Lifetime Preset", (int*)&l_cfg.lifetimePreset, "None\0Short Burst\0Medium Burst\0Long Burst\0Long Floating\0\0")) {
 						switch (l_cfg.lifetimePreset) {
 						case ParticleLifetimePreset::SHORT_BURST:

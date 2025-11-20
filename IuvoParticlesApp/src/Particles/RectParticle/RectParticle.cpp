@@ -133,4 +133,13 @@ namespace Particles {
 	ParticleColor::BLUE_TO_TRANSPARENT_FADE_OUT,
 	ParticleLifetime::MEDIUM_BURST
 	};
+
+	RectParticle RectParticle::RANDOM_PARTICLE() {
+		return RectParticle{
+			ParticleTransform::CreateRandomTransform(),
+			ParticleAnimation2D::CreateRandomAnimation2D(),
+			ParticleColor::CreateRandomColor(),
+			ParticleLifetime::CreateRandomLifetime()
+		};
+	}
 }

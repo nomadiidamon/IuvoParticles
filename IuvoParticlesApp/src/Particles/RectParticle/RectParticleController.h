@@ -79,14 +79,7 @@ namespace Particles {
 
 			// Randomized reset
 			particle = CreateRandomInternal(view_size, nullptr);
-			if (!particle.rp_colorData.p_lerpColor) {
-				particle.rp_colorData.p_currColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
-			}
-			else {
-				particle.rp_colorData.p_startColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
-				particle.rp_colorData.p_endColor = ImVec4(RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), RandFloat(0.0f, 1.0f), 1.0f);
-			}
-			particle.rp_lifetimeData.p_lifetime = 0.0f;
+
 		}
 
 		// compute rotated rectangle corners
@@ -282,7 +275,7 @@ namespace Particles {
 			else
 			{
 				// use the config defaults
-				//particle = cfg.RandomParticle_CONFIG();
+				particle = RectParticle::RANDOM_PARTICLE();
 			}
 
 

@@ -8,8 +8,8 @@ namespace Particles {
         // Position fallback (center)
         ImVec2 defaultEmitterPosition = ImVec2(150.0f, 150.0f);
         // Size ranges for randomized size (sx, sy)
-        ImVec2 randomSizeMin = ImVec2(5.0f, 5.0f);
-        ImVec2 randomSizeMax = ImVec2(20.0f, 20.0f);
+        ImVec2 randomSizeMin = ImVec2(1.0f, 1.0f);
+        ImVec2 randomSizeMax = ImVec2(250.0f, 250.0f);
         // Fallback base-size when none supplied
         ImVec2 defaultBaseSize = ImVec2(10.0f, 10.0f);
         ImVec2 defaultSpawnSize = ImVec2(10.0f, 10.0f);
@@ -34,21 +34,21 @@ namespace Particles {
 
         /// Lifetime
         // Lifetime ranges (seconds)
-        float lifetimeMin = 1.0f;
-        float lifetimeMax = 4.0f;
+        float lifetimeMin = 0.1f;
+        float lifetimeMax = 60.0f;
         float lifetimeRandomMin = 0.5f;
-        float lifetimeRandomMax = 4.0f;
+        float lifetimeRandomMax = 60.0f;
 
         /// Color
         // Color randomization defaults (0..1)
-        ImVec4 defaultStartColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-        ImVec4 defaultEndColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-        ImVec4 defaultCurrColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-        ImVec4 startColorMin = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-        ImVec4 endColorMin = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+        ImVec4 defaultStartColor = RandColor();
+        ImVec4 defaultEndColor = RandColor();
+        ImVec4 defaultCurrColor = RandColor();
+        ImVec4 startColorMin = RandColor();
+        ImVec4 endColorMin = RandColor();
 
         // Default movement/behavior
-        ImVec2 defaultVelocity = ImVec2(0.0f, -1.0f);
+        ImVec2 defaultVelocity = ImVec2(RandFloat(-50.0f, -50.0f), RandFloat(50.0f, 50.0f));
         float defaultMovementSpeed = 50.0f;
         bool  defaultCanMove = true;
         bool  defaultCanRotate = true;

@@ -8,6 +8,8 @@ namespace Particles {
 		ParticleAnimation2D rp_animation;
 		ParticleColor rp_colorData;
 		ParticleLifetime rp_lifetimeData;
+		
+		static RectParticle RANDOM_PARTICLE();
 	};
 
 	extern const RectParticle DEFAULT_RECT_PARTICLE;
