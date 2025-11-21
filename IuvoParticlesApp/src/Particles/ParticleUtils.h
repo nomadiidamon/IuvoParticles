@@ -1,5 +1,9 @@
 #pragma once
 #include <vector>
+#include <string>
+#include "imgui.h"
+#include "ParticleRandom.h"
+#include "ParticleConfig.h"
 
 namespace Particles {
 
@@ -7,7 +11,8 @@ namespace Particles {
 	static bool FloatEquals(float a, float b) {
 		return fabsf(a - b) <= EPS;
 	}
-
+	static constexpr float PI_F = 3.14159265358979323846f;
+	inline float DegToRad(float d) { return d * (PI_F / 180.0f); }
 	static bool ColorEquals(const ImVec4& a, const ImVec4& b) {
 		return FloatEquals(a.x, b.x) &&
 			FloatEquals(a.y, b.y) &&
@@ -15,15 +20,18 @@ namespace Particles {
 			FloatEquals(a.w, b.w);
 	}
 
-	static constexpr float PI_F = 3.14159265358979323846f;
-	inline float DegToRad(float d) { return d * (PI_F / 180.0f); }
+	/// TODO: Create Gateware math to ImVec2 conversion functions
 
+	/// TODO: Create Gateware math to ImVec4 conversion functions
+
+	/// TODO: convert all color utils to use Gateware math
 	static ImVec4 StripAlpha(const ImVec4& color) {
 		return ImVec4(color.x, color.y, color.z, 1.0f);
 	}
 	static ImVec4 SetAlpha(const ImVec4& color, float alpha = 0.0f) {
 		return ImVec4(color.x, color.y, color.z, alpha);
 	}
+
 
 	// basic colors
 	static ImVec4 ColorWhite() { return ImVec4(1.0f, 1.0f, 1.0f, 1.0f); }

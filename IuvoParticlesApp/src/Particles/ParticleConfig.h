@@ -1,6 +1,7 @@
 #pragma once
 #include "RectParticle/RectParticle.h"
 #include "ParticleRandom.h"
+#include "ParticleTypes.h"
 
 namespace Particles {
 
@@ -35,6 +36,10 @@ namespace Particles {
 
 		RectParticle defaultEmitterTemplate;
 		RectParticle defaultSpawnTemplate;
+
+		void Initialize() {
+
+		}
 	};
 
     // return a global config instance (modifiable at runtime)
@@ -42,6 +47,7 @@ namespace Particles {
         static ParticleConfig cfg;
         static bool initialized = false;
         if (!initialized) {
+			cfg.Initialize();
             initialized = true;
         }
         return cfg;
