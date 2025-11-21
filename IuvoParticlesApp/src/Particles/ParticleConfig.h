@@ -1,6 +1,6 @@
 #pragma once
 #include "RectParticle/RectParticle.h"
-#include "ParticleRandom.h"
+#include "ParticleUtils.h"
 #include "ParticleTypes.h"
 
 namespace Particles {
@@ -34,8 +34,8 @@ namespace Particles {
 		float defaultEmissionRate = 10.0f;  // particles/sec
 		ImVec2 defaultViewSize = ImVec2(800.0f, 600.0f);
 
-		RectParticle defaultEmitterTemplate;
-		RectParticle defaultSpawnTemplate;
+		//RectParticle defaultEmitterTemplate;
+		//RectParticle defaultSpawnTemplate;
 
 		void Initialize() {
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "../ParticleTypes.h"
-#include <string>
+#include "../ParticleUtils.h"
 
 namespace Particles {
 

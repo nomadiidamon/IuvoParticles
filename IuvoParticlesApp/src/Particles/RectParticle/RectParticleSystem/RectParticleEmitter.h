@@ -1,4 +1,5 @@
 #pragma once
+#include "../RectParticle.h"
 #include "../RectParticleUtils.h"
 #include "../RectParticleCache.h"
 

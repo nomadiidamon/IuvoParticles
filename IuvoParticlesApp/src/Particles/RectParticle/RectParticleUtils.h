@@ -1,5 +1,6 @@
 #pragma once
 #include "../ParticleUtils.h"
+#include "../../ParticleLayers/LayerConfig.h"
 #include "RectParticleController.h"
 
 namespace Particles {
@@ -25,6 +26,7 @@ namespace Particles {
 
         static RectParticle CreateDefaultParticle(const ImVec2& view_size, const ImVec2& pos = ImVec2(-FLT_MAX, -FLT_MAX), const RectParticle* defaultParticle = nullptr) {
             const auto& cfg = GetParticleConfig();
+			auto& p_cfg = GetLayerConfig();
             RectParticle out;
             
             if (defaultParticle) {
@@ -46,10 +48,10 @@ namespace Particles {
             }
             else {
                 // If a configured spawn template exists, use it
-                if (cfg.defaultSpawnTemplate.rp_transform.p_size.x > 0.0f && cfg.defaultSpawnTemplate.rp_transform.p_size.y > 0.0f) {
+                if (p_cfg.defaultParticle.rp_transform.p_size.x > 0.0f && p_cfg.defaultParticle.rp_transform.p_size.y > 0.0f) {
                     //return RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
                     if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
-                        out = RectParticleSpawner::FromTemplate(cfg.defaultSpawnTemplate);
+                        out = RectParticleSpawner::FromTemplate(p_cfg.defaultParticle);
                         out.rp_transform.p_position = pos;
 						RectParticleController(out).UpdateCenter();
                     }
