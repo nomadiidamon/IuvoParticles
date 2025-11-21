@@ -13,9 +13,9 @@ namespace Particles {
             // If caller supplied a position, create a random particle but force that position.
             if (position.x != -FLT_MAX && position.y != -FLT_MAX) {
                 RectParticle p = RectParticleSpawner::CreateRandom(view_size);
-                p.rp_transform.p_position = position;
-                p.rp_transform.p_center = ImVec2(position.x + p.rp_transform.p_size.x * 0.5f,
-                    position.y + p.rp_transform.p_size.y * 0.5f);
+                p.transform.position = position;
+                p.transform.center = ImVec2(position.x + p.transform.size.x * 0.5f,
+                    position.y + p.transform.size.y * 0.5f);
                 return p;
             }
             else {
@@ -32,15 +32,15 @@ namespace Particles {
             if (defaultParticle) {
                 if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
                     out = RectParticleSpawner::FromTemplate(*defaultParticle);
-                    out.rp_transform.p_position = pos;
-                    out.rp_transform.p_center = ImVec2(pos.x + out.rp_transform.p_size.x * 0.5f,
-                        pos.y + out.rp_transform.p_size.y * 0.5f);
+                    out.transform.position = pos;
+                    out.transform.center = ImVec2(pos.x + out.transform.size.x * 0.5f,
+                        pos.y + out.transform.size.y * 0.5f);
                     return out;
                 }
                 else {
                     // Use provided default template centered in the view
                     out = RectParticleSpawner::FromTemplate(*defaultParticle);
-                    out.rp_transform.p_position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
+                    out.transform.position = ImVec2(view_size.x * 0.5f, view_size.y * 0.5f);
                     // make sure center is synced
                     RectParticleController(out).UpdateCenter();
                     return out;
@@ -48,46 +48,46 @@ namespace Particles {
             }
             else {
                 // If a configured spawn template exists, use it
-                if (p_cfg.defaultParticle.rp_transform.p_size.x > 0.0f && p_cfg.defaultParticle.rp_transform.p_size.y > 0.0f) {
+                if (p_cfg.defaultParticle.transform.size.x > 0.0f && p_cfg.defaultParticle.transform.size.y > 0.0f) {
                     //return RectParticleController::CreateFromTemplate(cfg.defaultSpawnTemplate);
                     if (pos.x != -FLT_MAX && pos.y != -FLT_MAX) {
                         out = RectParticleSpawner::FromTemplate(p_cfg.defaultParticle);
-                        out.rp_transform.p_position = pos;
+                        out.transform.position = pos;
 						RectParticleController(out).UpdateCenter();
                     }
                 }
 
                 // fallback to a basic default that uses config defaults
-                out.rp_transform.p_position = cfg.transform.defaultPosition;
-                out.rp_transform.p_size = cfg.transform.defaultSize;
-                out.rp_transform.p_baseSize = out.rp_transform.p_size;
-				out.rp_transform.p_rotation = cfg.transform.defaultRotation;
-                out.rp_transform.p_randomSize = cfg.defaultRandomSize;
-                out.rp_transform.p_randomRotation = cfg.defaultRandomRotation;
-                out.rp_animation.p_velocity = cfg.animation.defaultVelocity;
-                out.rp_animation.p_movementSpeed = cfg.animation.defaultMovementSpeed;
-                out.rp_animation.canMove = cfg.defaultCanMove;
-                out.rp_colorData.p_startColor = cfg.color.defaultStartColor;
-                out.rp_colorData.p_endColor = cfg.color.defaultEndColor;
-                out.rp_colorData.p_lerpColor = cfg.defaultLerpColor;
-                out.rp_colorData.p_useAlpha = cfg.defaultUseAlpha;
-                out.rp_lifetimeData.p_maxLifetime = cfg.lifetime.defaultMaxLifetime;
-                out.rp_lifetimeData.p_randomizeLifetime = cfg.defaultRandomizeLifetime;
-                out.rp_transform.p_center = ImVec2(out.rp_transform.p_position.x + out.rp_transform.p_size.x * 0.5f,
-                    out.rp_transform.p_position.y + out.rp_transform.p_size.y * 0.5f);
+                out.transform.position = cfg.transform.defaultPosition;
+                out.transform.size = cfg.transform.defaultSize;
+                out.transform.baseSize = out.transform.size;
+				out.transform.rotation = cfg.transform.defaultRotation;
+                out.transform.randomSize = cfg.defaultRandomSize;
+                out.transform.randomRotation = cfg.defaultRandomRotation;
+                out.animation.p_velocity = cfg.animation.defaultVelocity;
+                out.animation.p_movementSpeed = cfg.animation.defaultMovementSpeed;
+                out.animation.canMove = cfg.defaultCanMove;
+                out.color.startColor = cfg.color.defaultStartColor;
+                out.color.endColor = cfg.color.defaultEndColor;
+                out.color.lerpColor = cfg.defaultLerpColor;
+                out.color.useAlpha = cfg.defaultUseAlpha;
+                out.lifetime.maxLifetime = cfg.lifetime.defaultMaxLifetime;
+                out.lifetime.randomizeLifetime = cfg.defaultRandomizeLifetime;
+                out.transform.center = ImVec2(out.transform.position.x + out.transform.size.x * 0.5f,
+                    out.transform.position.y + out.transform.size.y * 0.5f);
                 return out;
             }
         }
 
         static RectParticle CreateParticle(const ParticleTransform& p_transform, const ParticleColor& p_color, const ParticleLifetime& p_lifetime) {
             RectParticle particle;
-            particle.rp_transform = p_transform;
-            if (particle.rp_transform.p_baseSize.x <= 0.0f || particle.rp_transform.p_baseSize.y <= 0.0f)
-                particle.rp_transform.p_baseSize = particle.rp_transform.p_size;
-            particle.rp_colorData = p_color;
-            particle.rp_lifetimeData = p_lifetime;
-            particle.rp_transform.p_center = ImVec2(p_transform.p_position.x + p_transform.p_size.x * 0.5f,
-                p_transform.p_position.y + p_transform.p_size.y * 0.5f);
+            particle.transform = p_transform;
+            if (particle.transform.baseSize.x <= 0.0f || particle.transform.baseSize.y <= 0.0f)
+                particle.transform.baseSize = particle.transform.size;
+            particle.color = p_color;
+            particle.lifetime = p_lifetime;
+            particle.transform.center = ImVec2(p_transform.position.x + p_transform.size.x * 0.5f,
+                p_transform.position.y + p_transform.size.y * 0.5f);
             return particle;
         }
 
@@ -96,15 +96,15 @@ namespace Particles {
 			const ParticleColor& p_color,
 			const ParticleLifetime& p_lifetime) {
 			RectParticle particle;
-			particle.rp_transform = p_transform;
-			if (particle.rp_transform.p_baseSize.x <= 0.0f || particle.rp_transform.p_baseSize.y <= 0.0f)
-				particle.rp_transform.p_baseSize = particle.rp_transform.p_size;
-			particle.rp_animation = p_animation;
-			particle.rp_colorData = p_color;
-			particle.rp_colorData.p_currColor = p_color.p_startColor;
-			particle.rp_lifetimeData = p_lifetime;
-			particle.rp_transform.p_center = ImVec2(p_transform.p_position.x + p_transform.p_size.x * 0.5f,
-				p_transform.p_position.y + p_transform.p_size.y * 0.5f);
+			particle.transform = p_transform;
+			if (particle.transform.baseSize.x <= 0.0f || particle.transform.baseSize.y <= 0.0f)
+				particle.transform.baseSize = particle.transform.size;
+			particle.animation = p_animation;
+			particle.color = p_color;
+			particle.color.currColor = p_color.startColor;
+			particle.lifetime = p_lifetime;
+			particle.transform.center = ImVec2(p_transform.position.x + p_transform.size.x * 0.5f,
+				p_transform.position.y + p_transform.size.y * 0.5f);
 			return particle;
 		}
 
@@ -116,66 +116,66 @@ namespace Particles {
 				templateParticle = &defaultParticle;
 			}
 			for (int i = 0; i < burstCount; ++i) {
-				RectParticle p = CreateParticle(templateParticle->rp_transform, templateParticle->rp_animation, 
-                    templateParticle->rp_colorData, templateParticle->rp_lifetimeData);
+				RectParticle p = CreateParticle(templateParticle->transform, templateParticle->animation, 
+                    templateParticle->color, templateParticle->lifetime);
 
 				// Random radial velocity
 				float angle = (static_cast<float>(rand()) / RAND_MAX) * 2.0f * 3.14159265358979323846f;
 				float minSpeed = 200.0f;
 				float maxSpeed = 300.0f;
 				float speed = minSpeed + (static_cast<float>(rand()) / RAND_MAX) * (maxSpeed - minSpeed);
-				p.rp_animation.p_velocity = ImVec2(cosf(angle), sinf(angle));
-				p.rp_animation.p_movementSpeed = speed;
-				p.rp_animation.canMove = true;
+				p.animation.p_velocity = ImVec2(cosf(angle), sinf(angle));
+				p.animation.p_movementSpeed = speed;
+				p.animation.canMove = true;
 
                 // random lifetime around base
-                float baseLifetime = p.rp_lifetimeData.p_maxLifetime > 0.0f ? p.rp_lifetimeData.p_maxLifetime : 10.0f;
+                float baseLifetime = p.lifetime.maxLifetime > 0.0f ? p.lifetime.maxLifetime : 10.0f;
 				float randLifetime = baseLifetime * RandFloat(0.75f, 5.5f);
-                p.rp_lifetimeData.p_maxLifetime = randLifetime;
-                p.rp_lifetimeData.p_lifetime = 0.0f;
+                p.lifetime.maxLifetime = randLifetime;
+                p.lifetime.lifetime = 0.0f;
 
                 if (randColorRange) {
                     auto& p_cfg = GetParticleConfig();
-					p.rp_colorData.p_startColor = ParticleColor::CreateRandomColorInRange(
-						p_cfg.color.startColorMin, p_cfg.color.startColorMax).p_startColor;
-					p.rp_colorData.p_endColor = ParticleColor::CreateRandomColorInRange(
-						p_cfg.color.endColorMin, p_cfg.color.endColorMax).p_startColor;
+					p.color.startColor = ParticleColor::CreateRandomColorInRange(
+						p_cfg.color.startColorMin, p_cfg.color.startColorMax).startColor;
+					p.color.endColor = ParticleColor::CreateRandomColorInRange(
+						p_cfg.color.endColorMin, p_cfg.color.endColorMax).startColor;
                 }
 				else if (randomColor) {
-					p.rp_colorData.p_startColor = ParticleColor::CreateRandomColor().p_startColor;
-					p.rp_colorData.p_endColor = ParticleColor::CreateRandomColor().p_startColor;
+					p.color.startColor = ParticleColor::CreateRandomColor().startColor;
+					p.color.endColor = ParticleColor::CreateRandomColor().startColor;
 				}
 				// set color lerp/fade
-				p.rp_colorData.p_currColor = p.rp_colorData.p_startColor;
-				p.rp_colorData.p_lerpColor = true;
-				p.rp_colorData.p_useAlpha = true;
-				p.rp_colorData.p_endColor.w = 0.0f; // fade out
+				p.color.currColor = p.color.startColor;
+				p.color.lerpColor = true;
+				p.color.useAlpha = true;
+				p.color.endColor.w = 0.0f; // fade out
                 container.push_back(std::move(p));
 				//container.push_back(p);
 			}
 		}
         static bool IsExpired(const RectParticle& particle) {
-            return particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
+            return particle.lifetime.lifetime >= particle.lifetime.maxLifetime;
         }
 		static float LifetimeRatio(const RectParticle& particle) {
-			if (particle.rp_lifetimeData.p_maxLifetime <= 0.0f)
+			if (particle.lifetime.maxLifetime <= 0.0f)
 				return 0.0f;
-			return std::clamp(particle.rp_lifetimeData.p_lifetime / particle.rp_lifetimeData.p_maxLifetime, 0.0f, 1.0f);
+			return std::clamp(particle.lifetime.lifetime / particle.lifetime.maxLifetime, 0.0f, 1.0f);
 		}
         static bool IsEqualKeyAttributes(const RectParticle& a, const RectParticle& b) {
-            return FloatEquals(a.rp_transform.p_position.x, b.rp_transform.p_position.x) &&
-                FloatEquals(a.rp_transform.p_position.y, b.rp_transform.p_position.y) &&
-                FloatEquals(a.rp_transform.p_size.x, b.rp_transform.p_size.x) &&
-                FloatEquals(a.rp_transform.p_size.y, b.rp_transform.p_size.y) &&
-                FloatEquals(a.rp_colorData.p_startColor.x, b.rp_colorData.p_startColor.x) &&
-                FloatEquals(a.rp_colorData.p_startColor.y, b.rp_colorData.p_startColor.y) &&
-                FloatEquals(a.rp_colorData.p_startColor.z, b.rp_colorData.p_startColor.z) &&
-                FloatEquals(a.rp_colorData.p_endColor.w, b.rp_colorData.p_endColor.w) &&
-                FloatEquals(a.rp_colorData.p_endColor.x, b.rp_colorData.p_endColor.x) &&
-                FloatEquals(a.rp_colorData.p_endColor.y, b.rp_colorData.p_endColor.y) &&
-                FloatEquals(a.rp_colorData.p_endColor.z, b.rp_colorData.p_endColor.z) &&
-                FloatEquals(a.rp_colorData.p_lerpSpeed, b.rp_colorData.p_lerpSpeed) &&
-                FloatEquals(a.rp_lifetimeData.p_maxLifetime, b.rp_lifetimeData.p_maxLifetime);
+            return FloatEquals(a.transform.position.x, b.transform.position.x) &&
+                FloatEquals(a.transform.position.y, b.transform.position.y) &&
+                FloatEquals(a.transform.size.x, b.transform.size.x) &&
+                FloatEquals(a.transform.size.y, b.transform.size.y) &&
+                FloatEquals(a.color.startColor.x, b.color.startColor.x) &&
+                FloatEquals(a.color.startColor.y, b.color.startColor.y) &&
+                FloatEquals(a.color.startColor.z, b.color.startColor.z) &&
+                FloatEquals(a.color.endColor.w, b.color.endColor.w) &&
+                FloatEquals(a.color.endColor.x, b.color.endColor.x) &&
+                FloatEquals(a.color.endColor.y, b.color.endColor.y) &&
+                FloatEquals(a.color.endColor.z, b.color.endColor.z) &&
+                FloatEquals(a.color.lerpSpeed, b.color.lerpSpeed) &&
+                FloatEquals(a.lifetime.maxLifetime, b.lifetime.maxLifetime);
         }
         static void CalculateRotatedRectCorners(const RectParticle& particle, ImVec2 outCorners[4]) {
             RectParticleMotionController::ComputeRotatedCorners(particle, outCorners);
@@ -184,7 +184,7 @@ namespace Particles {
 			RectParticleController(particle).Update(ts, view_size, container, useDefaultParticle, defaultParticle);
         }
 		static void DrawParticleAgnostic(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
-			bool rotated = (particle.rp_animation.canRotate && particle.rp_transform.p_rotation.x != 0.0f);
+			bool rotated = (particle.animation.canRotate && particle.transform.rotation.x != 0.0f);
 
 			if (rotated) {
 				DrawRotatingParticle(draw_list, particle, view_pos);
@@ -194,18 +194,18 @@ namespace Particles {
 			}
 		}
         static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
-            ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
-            draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.p_position.x, view_pos.y + particle.rp_transform.p_position.y),
-                ImVec2(view_pos.x + particle.rp_transform.p_position.x + particle.rp_transform.p_size.x, view_pos.y + particle.rp_transform.p_position.y + particle.rp_transform.p_size.y),
+            ImU32 color = ImGui::GetColorU32(particle.color.currColor);
+            draw_list->AddRectFilled(ImVec2(view_pos.x + particle.transform.position.x, view_pos.y + particle.transform.position.y),
+                ImVec2(view_pos.x + particle.transform.position.x + particle.transform.size.x, view_pos.y + particle.transform.position.y + particle.transform.size.y),
                 color);
         }
         static void DrawParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos, const ImU32& override_color) {
-            draw_list->AddRectFilled(ImVec2(view_pos.x + particle.rp_transform.p_position.x, view_pos.y + particle.rp_transform.p_position.y),
-                ImVec2(view_pos.x + particle.rp_transform.p_position.x + particle.rp_transform.p_size.x, view_pos.y + particle.rp_transform.p_position.y + particle.rp_transform.p_size.y),
+            draw_list->AddRectFilled(ImVec2(view_pos.x + particle.transform.position.x, view_pos.y + particle.transform.position.y),
+                ImVec2(view_pos.x + particle.transform.position.x + particle.transform.size.x, view_pos.y + particle.transform.position.y + particle.transform.size.y),
                 override_color);
         }
         static void DrawRotatingParticle(ImDrawList* draw_list, const RectParticle& particle, const ImVec2& view_pos) {
-            ImU32 color = ImGui::GetColorU32(particle.rp_colorData.p_currColor);
+            ImU32 color = ImGui::GetColorU32(particle.color.currColor);
             ImVec2 corners[4];
             CalculateRotatedRectCorners(particle, corners);
             for (int i = 0; i < 4; ++i) {
@@ -218,7 +218,7 @@ namespace Particles {
         static void SortParticlesByLifetime(std::vector<RectParticle>& particles) {
             std::sort(particles.begin(), particles.end(),
                 [](const RectParticle& a, const RectParticle& b) {
-                    return a.rp_lifetimeData.p_lifetime < b.rp_lifetimeData.p_lifetime;
+                    return a.lifetime.lifetime < b.lifetime.lifetime;
                 });
         }
 		static bool ContainsParticle(const std::vector<RectParticle>& particles, const RectParticle& target) {
@@ -248,28 +248,85 @@ namespace Particles {
         /// TODO: update this to use the default sub structs in ParticleTypes.h
         static bool IsTrueDefaultParticle(const RectParticle& particle) {
   
-            bool transformDefault = FloatEquals(particle.rp_transform.p_position.x, ParticleTransform::DEFAULT_TRANSFORM.p_position.x) &&
-                FloatEquals(particle.rp_transform.p_position.y, ParticleTransform::DEFAULT_TRANSFORM.p_position.y) &&
-                FloatEquals(particle.rp_transform.p_size.x, ParticleTransform::DEFAULT_TRANSFORM.p_size.x) &&
-                FloatEquals(particle.rp_transform.p_size.y, ParticleTransform::DEFAULT_TRANSFORM.p_size.y);
+            bool transformDefault = FloatEquals(particle.transform.position.x, ParticleTransform::DEFAULT_TRANSFORM.position.x) &&
+                FloatEquals(particle.transform.position.y, ParticleTransform::DEFAULT_TRANSFORM.position.y) &&
+                FloatEquals(particle.transform.size.x, ParticleTransform::DEFAULT_TRANSFORM.size.x) &&
+                FloatEquals(particle.transform.size.y, ParticleTransform::DEFAULT_TRANSFORM.size.y);
 
-            bool animDefault = FloatEquals(particle.rp_animation.p_velocity.x, ParticleAnimation2D::DEFAULT_ANIMATION.p_velocity.x) &&
-                FloatEquals(particle.rp_animation.p_velocity.y, ParticleAnimation2D::DEFAULT_ANIMATION.p_velocity.y) &&
-                FloatEquals(particle.rp_animation.p_movementSpeed, ParticleAnimation2D::DEFAULT_ANIMATION.p_movementSpeed);
+            bool animDefault = FloatEquals(particle.animation.p_velocity.x, ParticleAnimation2D::DEFAULT_ANIMATION.p_velocity.x) &&
+                FloatEquals(particle.animation.p_velocity.y, ParticleAnimation2D::DEFAULT_ANIMATION.p_velocity.y) &&
+                FloatEquals(particle.animation.p_movementSpeed, ParticleAnimation2D::DEFAULT_ANIMATION.p_movementSpeed);
 
-            bool colorDefault = FloatEquals(particle.rp_colorData.p_currColor.x, ParticleColor::DEFAULT_COLOR.p_currColor.x) &&
-                FloatEquals(particle.rp_colorData.p_currColor.y, ParticleColor::DEFAULT_COLOR.p_currColor.y) &&
-                FloatEquals(particle.rp_colorData.p_currColor.z, ParticleColor::DEFAULT_COLOR.p_currColor.z) &&
-                FloatEquals(particle.rp_colorData.p_currColor.w, ParticleColor::DEFAULT_COLOR.p_currColor.w);
+            bool colorDefault = FloatEquals(particle.color.currColor.x, ParticleColor::DEFAULT_COLOR.currColor.x) &&
+                FloatEquals(particle.color.currColor.y, ParticleColor::DEFAULT_COLOR.currColor.y) &&
+                FloatEquals(particle.color.currColor.z, ParticleColor::DEFAULT_COLOR.currColor.z) &&
+                FloatEquals(particle.color.currColor.w, ParticleColor::DEFAULT_COLOR.currColor.w);
 
-            bool lifetimeDefault = FloatEquals(particle.rp_lifetimeData.p_lifetime, ParticleLifetime::DEFAULT_LIFETIME.p_lifetime) &&
-                FloatEquals(particle.rp_lifetimeData.p_maxLifetime, ParticleLifetime::DEFAULT_LIFETIME.p_maxLifetime);
+            bool lifetimeDefault = FloatEquals(particle.lifetime.lifetime, ParticleLifetime::DEFAULT_LIFETIME.lifetime) &&
+                FloatEquals(particle.lifetime.maxLifetime, ParticleLifetime::DEFAULT_LIFETIME.maxLifetime);
 
             return transformDefault && animDefault && colorDefault && lifetimeDefault;
         }
 
 		static bool IsSameParticle(const RectParticle* a, const RectParticle& b) {
 			return &b == a;
+		}
+
+        static void ApplyColorPreset(RectParticle& particle, const ParticleColor presetData) {
+			particle.color.startColor = presetData.startColor;
+			particle.color.endColor = presetData.endColor;
+			particle.color.lerpSpeed = presetData.lerpSpeed;
+			particle.color.lerpColor = presetData.lerpColor;
+        }
+
+		static void ApplyColorPreset(RectParticle& particle, ParticleColorPreset preset) {
+            switch (preset) {
+                case ParticleColorPreset::RED_TO_YELLOW_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::RED_TO_YELLOW_FADE_OUT);
+                    break;
+                case ParticleColorPreset::RED_TO_TRANSPARENT_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::RED_TO_TRANSPARENT_FADE_OUT);
+                    break;
+                case ParticleColorPreset::RED_TO_BLUE_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::RED_TO_BLUE_FADE_OUT);
+                    break;
+                case ParticleColorPreset::ORANGE_TO_YELLOW_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::ORANGE_TO_YELLOW_FADE_OUT);
+                    break;
+                case ParticleColorPreset::ORANGE_TO_TRANSPARENT_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::ORANGE_TO_TRANSPARENT_FADE_OUT);
+                    break;
+                case ParticleColorPreset::YELLOW_TO_GREEN_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::YELLOW_TO_GREEN_FADE_OUT);
+                    break;
+                case ParticleColorPreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::YELLOW_TO_TRANSPARENT_FADE_OUT);
+                    break;
+                case ParticleColorPreset::BLUE_TO_CYAN_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::BLUE_TO_CYAN_FADE_OUT);
+                    break;
+                case ParticleColorPreset::BLUE_TO_TRANSPARENT_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::BLUE_TO_TRANSPARENT_FADE_OUT);
+                    break;
+                case ParticleColorPreset::FIRE_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::FIRE_FADE_OUT);
+                    break;
+                case ParticleColorPreset::ICE_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::ICE_FADE_OUT);
+                    break;
+                case ParticleColorPreset::TOXIC_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::TOXIC_FADE_OUT);
+                    break;
+                case ParticleColorPreset::MAGIC_PURPLE_FADE_OUT:
+                    ApplyColorPreset(particle, ParticleColor::MAGIC_PURPLE_FADE_OUT);
+                    break;
+                case ParticleColorPreset::NONE:
+                default:
+                    // do nothing
+                    break;
+                
+            }
+
 		}
 
 

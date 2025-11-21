@@ -38,15 +38,15 @@ namespace Particles {
 				RectParticle p;
 				if (l_cfg.useDefaultParticle) {
 					p = RectParticleUtils::CreateParticle(
-						l_cfg.defaultParticle.rp_transform,
-						l_cfg.defaultParticle.rp_colorData,
-						l_cfg.defaultParticle.rp_lifetimeData
+						l_cfg.defaultParticle.transform,
+						l_cfg.defaultParticle.color,
+						l_cfg.defaultParticle.lifetime
 					);
 				}
 				else {
 					p = RectParticleUtils::CreateRandomParticle(l_cfg.view_size);
 				}
-				p.rp_transform.p_position = pos;
+				p.transform.position = pos;
 				particles.push_back(std::move(p));
 			}
 		}
@@ -83,30 +83,30 @@ namespace Particles {
 
 			for (int i = 0; i < createCount; ++i) {
 				RectParticle p = RectParticleUtils::CreateParticle(
-					l_cfg.defaultParticle.rp_transform,
-					l_cfg.defaultParticle.rp_colorData,
-					l_cfg.defaultParticle.rp_lifetimeData
+					l_cfg.defaultParticle.transform,
+					l_cfg.defaultParticle.color,
+					l_cfg.defaultParticle.lifetime
 				);
 
-				p.rp_transform.p_position = l_cfg.lastClickPos;
+				p.transform.position = l_cfg.lastClickPos;
 
 				// Random radial velocity
 				float angle = (static_cast<float>(rand()) / RAND_MAX) * 2.0f * 3.14159265358979323846f;
 				float minSpeed = 50.0f;
 				float maxSpeed = 300.0f;
 				float speed = minSpeed + (static_cast<float>(rand()) / RAND_MAX) * (maxSpeed - minSpeed);
-				p.rp_animation.p_velocity = ImVec2(cosf(angle), sinf(angle));
-				p.rp_animation.p_movementSpeed = speed;
-				p.rp_animation.canMove = true;
+				p.animation.p_velocity = ImVec2(cosf(angle), sinf(angle));
+				p.animation.p_movementSpeed = speed;
+				p.animation.canMove = true;
 
 				// random lifetime around base
-				float baseLifetime = p.rp_lifetimeData.p_maxLifetime > 0.0f ? p.rp_lifetimeData.p_maxLifetime : 1.0f;
+				float baseLifetime = p.lifetime.maxLifetime > 0.0f ? p.lifetime.maxLifetime : 1.0f;
 				float randLifetime = baseLifetime * (0.75f + (static_cast<float>(rand()) / RAND_MAX) * 0.75f);
-				p.rp_lifetimeData.p_maxLifetime = randLifetime;
-				p.rp_lifetimeData.p_lifetime = 0.0f;
+				p.lifetime.maxLifetime = randLifetime;
+				p.lifetime.lifetime = 0.0f;
 
-				if (p.rp_transform.p_randomRotation) {
-					p.rp_transform.p_rotation.x = (static_cast<float>(rand()) / RAND_MAX) * 360.0f;
+				if (p.transform.randomRotation) {
+					p.transform.rotation.x = (static_cast<float>(rand()) / RAND_MAX) * 360.0f;
 				}
 
 				particles.push_back(std::move(p));
@@ -130,7 +130,7 @@ namespace Particles {
 			ofs << "gravity " << l_cfg.gravity.x << " " << l_cfg.gravity.y << "\n";
 			ofs << "drag " << l_cfg.drag << "\n";
 			// particle color example
-			ofs << "start_color " << l_cfg.defaultParticle.rp_colorData.p_startColor.x << " " << l_cfg.defaultParticle.rp_colorData.p_startColor.y << " " << l_cfg.defaultParticle.rp_colorData.p_startColor.z << " " << l_cfg.defaultParticle.rp_colorData.p_startColor.w << "\n";
+			ofs << "start_color " << l_cfg.defaultParticle.color.startColor.x << " " << l_cfg.defaultParticle.color.startColor.y << " " << l_cfg.defaultParticle.color.startColor.z << " " << l_cfg.defaultParticle.color.startColor.w << "\n";
 			ofs.close();
 			return true;
 		}
@@ -148,7 +148,7 @@ namespace Particles {
 				else if (key == "hover_interval") { ifs >> l_cfg.hoverBurstInterval; }
 				else if (key == "gravity") { ifs >> l_cfg.gravity.x >> l_cfg.gravity.y; }
 				else if (key == "drag") { ifs >> l_cfg.drag; }
-				else if (key == "start_color") { ifs >> l_cfg.defaultParticle.rp_colorData.p_startColor.x >> l_cfg.defaultParticle.rp_colorData.p_startColor.y >> l_cfg.defaultParticle.rp_colorData.p_startColor.z >> l_cfg.defaultParticle.rp_colorData.p_startColor.w; }
+				else if (key == "start_color") { ifs >> l_cfg.defaultParticle.color.startColor.x >> l_cfg.defaultParticle.color.startColor.y >> l_cfg.defaultParticle.color.startColor.z >> l_cfg.defaultParticle.color.startColor.w; }
 				else {
 					// unknown key: try skip line
 					std::string rest;
@@ -215,28 +215,28 @@ namespace Particles {
 				}
 
 				// Background color rect
-				if (l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime <= 0.0f) {
-					l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime = 1.0f;
+				if (l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime <= 0.0f) {
+					l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime = 1.0f;
 				}
-				if (l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime >= l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime) {
-					l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime = 0.0f;
-					l_cfg.backgroundParticle.bg_colorData.p_currColor = l_cfg.backgroundParticle.bg_colorData.p_startColor;
+				if (l_cfg.backgroundParticle.bg_lifetimeData.lifetime >= l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime) {
+					l_cfg.backgroundParticle.bg_lifetimeData.lifetime = 0.0f;
+					l_cfg.backgroundParticle.bg_colorData.currColor = l_cfg.backgroundParticle.bg_colorData.startColor;
 				}
-				float bg_lifeRatio = l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime / l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime;
+				float bg_lifeRatio = l_cfg.backgroundParticle.bg_lifetimeData.lifetime / l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime;
 				bg_lifeRatio = std::clamp(bg_lifeRatio, 0.0f, 1.0f);
-				l_cfg.backgroundParticle.bg_colorData.p_currColor = ImVec4(
-					l_cfg.backgroundParticle.bg_colorData.p_startColor.x + (l_cfg.backgroundParticle.bg_colorData.p_endColor.x - l_cfg.backgroundParticle.bg_colorData.p_startColor.x) * bg_lifeRatio,
-					l_cfg.backgroundParticle.bg_colorData.p_startColor.y + (l_cfg.backgroundParticle.bg_colorData.p_endColor.y - l_cfg.backgroundParticle.bg_colorData.p_startColor.y) * bg_lifeRatio,
-					l_cfg.backgroundParticle.bg_colorData.p_startColor.z + (l_cfg.backgroundParticle.bg_colorData.p_endColor.z - l_cfg.backgroundParticle.bg_colorData.p_startColor.z) * bg_lifeRatio,
+				l_cfg.backgroundParticle.bg_colorData.currColor = ImVec4(
+					l_cfg.backgroundParticle.bg_colorData.startColor.x + (l_cfg.backgroundParticle.bg_colorData.endColor.x - l_cfg.backgroundParticle.bg_colorData.startColor.x) * bg_lifeRatio,
+					l_cfg.backgroundParticle.bg_colorData.startColor.y + (l_cfg.backgroundParticle.bg_colorData.endColor.y - l_cfg.backgroundParticle.bg_colorData.startColor.y) * bg_lifeRatio,
+					l_cfg.backgroundParticle.bg_colorData.startColor.z + (l_cfg.backgroundParticle.bg_colorData.endColor.z - l_cfg.backgroundParticle.bg_colorData.startColor.z) * bg_lifeRatio,
 					1.0f);
 
 				draw_list->AddRectFilled(l_cfg.view_pos, ImVec2(l_cfg.view_pos.x + l_cfg.view_size.x, l_cfg.view_pos.y + l_cfg.view_size.y),
-					ImGui::GetColorU32(l_cfg.backgroundParticle.bg_colorData.p_currColor));
+					ImGui::GetColorU32(l_cfg.backgroundParticle.bg_colorData.currColor));
 
 				// draw each particle (respecting rotation)
 				for (auto& particle : particles) {
 					if (l_cfg.randomizeEverything) {
-						auto& pos = particle.rp_transform.p_position;
+						auto& pos = particle.transform.position;
 						particle = RectParticleUtils::CreateRandomParticle(l_cfg.view_size, pos);
 						RectParticleUtils::DrawParticleAgnostic(draw_list, particle, l_cfg.view_pos);
 						continue;
@@ -265,21 +265,21 @@ namespace Particles {
 				particles.reserve(l_cfg.defaultParticleCount);
 				for (int i = 0; i < l_cfg.defaultParticleCount; ++i) {
 					particles.push_back(RectParticleUtils::CreateParticle(
-						l_cfg.defaultParticle.rp_transform,
-						l_cfg.defaultParticle.rp_colorData,
-						l_cfg.defaultParticle.rp_lifetimeData
+						l_cfg.defaultParticle.transform,
+						l_cfg.defaultParticle.color,
+						l_cfg.defaultParticle.lifetime
 					));
 				}
 			}
 			else {
 				particles.reserve(l_cfg.defaultParticleCount);
 				for (int i = 0; i < l_cfg.defaultParticleCount; ++i) {
-					particles.push_back(RectParticleUtils::CreateRandomParticle(l_cfg.view_size, l_cfg.defaultParticle.rp_transform.p_position));
+					particles.push_back(RectParticleUtils::CreateRandomParticle(l_cfg.view_size, l_cfg.defaultParticle.transform.position));
 				}
 			}
 
-			l_cfg.backgroundParticle.bg_colorData.p_startColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-			l_cfg.backgroundParticle.bg_colorData.p_endColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+			l_cfg.backgroundParticle.bg_colorData.startColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+			l_cfg.backgroundParticle.bg_colorData.endColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 			initialized = true;
 
 		}
@@ -292,15 +292,15 @@ namespace Particles {
 			if (l_cfg.paused && !l_cfg.stepOnce) {
 
 				/// TODO: add bg update even when paused?
-				l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime += ts;
-				if (l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime <= 0.0f)
-					l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime = 1.0f;
-				float bg_lifeRatio = l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime / l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime;
+				l_cfg.backgroundParticle.bg_lifetimeData.lifetime += ts;
+				if (l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime <= 0.0f)
+					l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime = 1.0f;
+				float bg_lifeRatio = l_cfg.backgroundParticle.bg_lifetimeData.lifetime / l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime;
 				bg_lifeRatio = std::clamp(bg_lifeRatio, 0.0f, 1.0f);
-				l_cfg.backgroundParticle.bg_colorData.p_currColor = ImVec4(
-					l_cfg.backgroundParticle.bg_colorData.p_startColor.x + (l_cfg.backgroundParticle.bg_colorData.p_endColor.x - l_cfg.backgroundParticle.bg_colorData.p_startColor.x) * bg_lifeRatio,
-					l_cfg.backgroundParticle.bg_colorData.p_startColor.y + (l_cfg.backgroundParticle.bg_colorData.p_endColor.y - l_cfg.backgroundParticle.bg_colorData.p_startColor.y) * bg_lifeRatio,
-					l_cfg.backgroundParticle.bg_colorData.p_startColor.z + (l_cfg.backgroundParticle.bg_colorData.p_endColor.z - l_cfg.backgroundParticle.bg_colorData.p_startColor.z) * bg_lifeRatio,
+				l_cfg.backgroundParticle.bg_colorData.currColor = ImVec4(
+					l_cfg.backgroundParticle.bg_colorData.startColor.x + (l_cfg.backgroundParticle.bg_colorData.endColor.x - l_cfg.backgroundParticle.bg_colorData.startColor.x) * bg_lifeRatio,
+					l_cfg.backgroundParticle.bg_colorData.startColor.y + (l_cfg.backgroundParticle.bg_colorData.endColor.y - l_cfg.backgroundParticle.bg_colorData.startColor.y) * bg_lifeRatio,
+					l_cfg.backgroundParticle.bg_colorData.startColor.z + (l_cfg.backgroundParticle.bg_colorData.endColor.z - l_cfg.backgroundParticle.bg_colorData.startColor.z) * bg_lifeRatio,
 					1.0f);
 				// consume a single step if requested, then return
 				if (l_cfg.stepOnce) {
@@ -314,10 +314,10 @@ namespace Particles {
 			// Update particles: apply gravity and drag, then call existing UpdateParticle
 			for (auto& particle : particles) {
 				// apply gravity (as acceleration) to the velocity vector
-				if (particle.rp_animation.canMove) {
+				if (particle.animation.canMove) {
 					// convert to world velocity vector
-					ImVec2 v = ImVec2(particle.rp_animation.p_velocity.x * particle.rp_animation.p_movementSpeed,
-						particle.rp_animation.p_velocity.y * particle.rp_animation.p_movementSpeed);
+					ImVec2 v = ImVec2(particle.animation.p_velocity.x * particle.animation.p_movementSpeed,
+						particle.animation.p_velocity.y * particle.animation.p_movementSpeed);
 
 					// acceleration
 					v.x += l_cfg.gravity.x * simTs;
@@ -331,11 +331,11 @@ namespace Particles {
 					// convert back into direction + magnitude
 					float speed = sqrtf(v.x * v.x + v.y * v.y);
 					if (speed > 0.0001f) {
-						particle.rp_animation.p_velocity = ImVec2(v.x / speed, v.y / speed);
-						particle.rp_animation.p_movementSpeed = speed;
+						particle.animation.p_velocity = ImVec2(v.x / speed, v.y / speed);
+						particle.animation.p_movementSpeed = speed;
 					}
 					else {
-						particle.rp_animation.p_movementSpeed = 0.0f;
+						particle.animation.p_movementSpeed = 0.0f;
 					}
 				}
 				// call your utility that updates lifetime, transform, rotation, color etc.
@@ -343,15 +343,15 @@ namespace Particles {
 			}
 
 			// background anim
-			l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime += ts;
-			if (l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime <= 0.0f)
-				l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime = 1.0f;
-			float bg_lifeRatio = l_cfg.backgroundParticle.bg_lifetimeData.p_lifetime / l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime;
+			l_cfg.backgroundParticle.bg_lifetimeData.lifetime += ts;
+			if (l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime <= 0.0f)
+				l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime = 1.0f;
+			float bg_lifeRatio = l_cfg.backgroundParticle.bg_lifetimeData.lifetime / l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime;
 			bg_lifeRatio = std::clamp(bg_lifeRatio, 0.0f, 1.0f);
-			l_cfg.backgroundParticle.bg_colorData.p_currColor = ImVec4(
-				l_cfg.backgroundParticle.bg_colorData.p_startColor.x + (l_cfg.backgroundParticle.bg_colorData.p_endColor.x - l_cfg.backgroundParticle.bg_colorData.p_startColor.x) * bg_lifeRatio,
-				l_cfg.backgroundParticle.bg_colorData.p_startColor.y + (l_cfg.backgroundParticle.bg_colorData.p_endColor.y - l_cfg.backgroundParticle.bg_colorData.p_startColor.y) * bg_lifeRatio,
-				l_cfg.backgroundParticle.bg_colorData.p_startColor.z + (l_cfg.backgroundParticle.bg_colorData.p_endColor.z - l_cfg.backgroundParticle.bg_colorData.p_startColor.z) * bg_lifeRatio,
+			l_cfg.backgroundParticle.bg_colorData.currColor = ImVec4(
+				l_cfg.backgroundParticle.bg_colorData.startColor.x + (l_cfg.backgroundParticle.bg_colorData.endColor.x - l_cfg.backgroundParticle.bg_colorData.startColor.x) * bg_lifeRatio,
+				l_cfg.backgroundParticle.bg_colorData.startColor.y + (l_cfg.backgroundParticle.bg_colorData.endColor.y - l_cfg.backgroundParticle.bg_colorData.startColor.y) * bg_lifeRatio,
+				l_cfg.backgroundParticle.bg_colorData.startColor.z + (l_cfg.backgroundParticle.bg_colorData.endColor.z - l_cfg.backgroundParticle.bg_colorData.startColor.z) * bg_lifeRatio,
 				1.0f);
 
 			HandleHoverBurst(simTs);
@@ -391,34 +391,34 @@ namespace Particles {
 				return;
 
 			// Center of Viewport
-			l_cfg.defaultParticle.rp_transform.p_position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
-			p_cfg.transform.defaultPosition = l_cfg.defaultParticle.rp_transform.p_position;
+			l_cfg.defaultParticle.transform.position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
+			p_cfg.transform.defaultPosition = l_cfg.defaultParticle.transform.position;
 			// Size 10x10
-			l_cfg.defaultParticle.rp_transform.p_size = ImVec2(10.0f, 10.0f);
+			l_cfg.defaultParticle.transform.size = ImVec2(10.0f, 10.0f);
 			// No Size Randomization
-			l_cfg.defaultParticle.rp_transform.p_randomSize = false;
+			l_cfg.defaultParticle.transform.randomSize = false;
 			// No Rotation			
-			l_cfg.defaultParticle.rp_transform.p_randomRotation = false;
+			l_cfg.defaultParticle.transform.randomRotation = false;
 
 			// Downward Velocity
-			l_cfg.defaultParticle.rp_animation.p_velocity = ImVec2(-1.0f, -3.0f);
+			l_cfg.defaultParticle.animation.p_velocity = ImVec2(-1.0f, -3.0f);
 			// Moderate Speed			
-			l_cfg.defaultParticle.rp_animation.p_movementSpeed = 50.0f;
+			l_cfg.defaultParticle.animation.p_movementSpeed = 50.0f;
 			// Enable Movement
-			l_cfg.defaultParticle.rp_animation.canMove = true;
+			l_cfg.defaultParticle.animation.canMove = true;
 
 			// Start Color Red
-			l_cfg.defaultParticle.rp_colorData.p_startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			l_cfg.defaultParticle.color.startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 			// End Color Yellow
-			l_cfg.defaultParticle.rp_colorData.p_endColor = ImVec4(1.0f, 1.0f, 0.0f, 0.0f);
+			l_cfg.defaultParticle.color.endColor = ImVec4(1.0f, 1.0f, 0.0f, 0.0f);
 			// Lerp Color Enabled
-			l_cfg.defaultParticle.rp_colorData.p_lerpColor = true;
+			l_cfg.defaultParticle.color.lerpColor = true;
 			// Use Alpha Channel
-			l_cfg.defaultParticle.rp_colorData.p_useAlpha = true;
+			l_cfg.defaultParticle.color.useAlpha = true;
 			// Lifetime 2 Seconds
-			l_cfg.defaultParticle.rp_lifetimeData.p_maxLifetime = 2.0f;
+			l_cfg.defaultParticle.lifetime.maxLifetime = 2.0f;
 			// No Lifetime Randomization
-			l_cfg.defaultParticle.rp_lifetimeData.p_randomizeLifetime = false;
+			l_cfg.defaultParticle.lifetime.randomizeLifetime = false;
 		}
 
 		virtual void OnAttach() override {
@@ -427,43 +427,6 @@ namespace Particles {
 			if (p_layer) {
 
 			}
-		}
-
-		void ApplyColorPreset(const ParticleColor& presetData) {
-			l_cfg.defaultParticle.rp_colorData.p_startColor = presetData.p_startColor;
-			l_cfg.defaultParticle.rp_colorData.p_endColor = presetData.p_endColor;
-			l_cfg.defaultParticle.rp_colorData.p_lerpSpeed = presetData.p_lerpSpeed;
-			l_cfg.defaultParticle.rp_colorData.p_lerpColor = presetData.p_lerpColor;
-		}
-
-		void ApplyLifetimePreset(const ParticleLifetime& presetData) {
-			l_cfg.defaultParticle.rp_lifetimeData.p_maxLifetime = presetData.p_maxLifetime;
-			l_cfg.defaultParticle.rp_lifetimeData.p_randomizeLifetime = presetData.p_randomizeLifetime;
-		}
-
-		void ApplyTransformPreset(const ParticleTransform& presetData) {
-			//l_cfg.defaultParticle.rp_transform.p_position = presetData.p_position;
-			l_cfg.defaultParticle.rp_transform.p_size = presetData.p_size;
-			l_cfg.defaultParticle.rp_transform.p_randomSize = presetData.p_randomSize;
-			l_cfg.defaultParticle.rp_transform.p_randomRotation = presetData.p_randomRotation;
-			l_cfg.defaultParticle.rp_transform.p_rotation = presetData.p_rotation;
-		}
-
-		void ApplyAnimationPreset(const ParticleAnimation2D& presetData) {
-			l_cfg.defaultParticle.rp_animation.p_velocity = presetData.p_velocity;
-			l_cfg.defaultParticle.rp_animation.p_movementSpeed = presetData.p_movementSpeed;
-			l_cfg.defaultParticle.rp_animation.p_rotationSpeed = presetData.p_rotationSpeed;
-			l_cfg.defaultParticle.rp_animation.p_scaleSpeed = presetData.p_scaleSpeed;
-			l_cfg.defaultParticle.rp_animation.canMove = presetData.canMove;
-			l_cfg.defaultParticle.rp_animation.canRotate = presetData.canRotate;
-			l_cfg.defaultParticle.rp_animation.canScale = presetData.canScale;
-		}
-
-		void ApplyParticlePreset(const RectParticle& presetData) {
-			ApplyTransformPreset(presetData.rp_transform);
-			ApplyColorPreset(presetData.rp_colorData);
-			ApplyLifetimePreset(presetData.rp_lifetimeData);
-			ApplyAnimationPreset(presetData.rp_animation);
 		}
 
 		virtual void OnUIRender() override {
@@ -496,13 +459,13 @@ namespace Particles {
 
 				if (ImGui::TreeNode("Background Particle")) {
 
-					ImGui::ColorEdit4("Start Color", (float*)&l_cfg.backgroundParticle.bg_colorData.p_startColor);
-					ImGui::ColorEdit4("End Color", (float*)&l_cfg.backgroundParticle.bg_colorData.p_endColor);
-					ImGui::Checkbox("Lerp Color", &l_cfg.backgroundParticle.bg_colorData.p_lerpColor);
-					ImGui::DragFloat("Lerp Speed", &l_cfg.backgroundParticle.bg_colorData.p_lerpSpeed, l_cfg.drag, 0.0f, 5.0f);
+					ImGui::ColorEdit4("Start Color", (float*)&l_cfg.backgroundParticle.bg_colorData.startColor);
+					ImGui::ColorEdit4("End Color", (float*)&l_cfg.backgroundParticle.bg_colorData.endColor);
+					ImGui::Checkbox("Lerp Color", &l_cfg.backgroundParticle.bg_colorData.lerpColor);
+					ImGui::DragFloat("Lerp Speed", &l_cfg.backgroundParticle.bg_colorData.lerpSpeed, l_cfg.drag, 0.0f, 5.0f);
 
-					ImGui::DragFloat("Max Lifetime", &l_cfg.backgroundParticle.bg_lifetimeData.p_maxLifetime, l_cfg.drag, 0.01f, 60.0f);
-					ImGui::Checkbox("Randomize Lifetime", &l_cfg.backgroundParticle.bg_lifetimeData.p_randomizeLifetime);
+					ImGui::DragFloat("Max Lifetime", &l_cfg.backgroundParticle.bg_lifetimeData.maxLifetime, l_cfg.drag, 0.01f, 60.0f);
+					ImGui::Checkbox("Randomize Lifetime", &l_cfg.backgroundParticle.bg_lifetimeData.randomizeLifetime);
 
 					ImGui::Separator();
 					ImGui::TreePop();
@@ -555,50 +518,50 @@ namespace Particles {
 
 				}
 				if (ImGui::Button("Random Default Particle")) {
-					auto pos = l_cfg.defaultParticle.rp_transform.p_position;
-					l_cfg.defaultParticle.rp_transform = ParticleTransform::CreateRandomTransform();
-					l_cfg.defaultParticle.rp_transform.p_position = pos;
-					l_cfg.defaultParticle.rp_animation = ParticleAnimation2D::CreateRandomAnimation2D();
-					l_cfg.defaultParticle.rp_colorData = ParticleColor::CreateRandomColor();
-					l_cfg.defaultParticle.rp_lifetimeData = ParticleLifetime::CreateRandomLifetime();
+					auto pos = l_cfg.defaultParticle.transform.position;
+					l_cfg.defaultParticle.transform = ParticleTransform::CreateRandomTransform();
+					l_cfg.defaultParticle.transform.position = pos;
+					l_cfg.defaultParticle.animation = ParticleAnimation2D::CreateRandomAnimation2D();
+					l_cfg.defaultParticle.color = ParticleColor::CreateRandomColor();
+					l_cfg.defaultParticle.lifetime = ParticleLifetime::CreateRandomLifetime();
 				}
 				if (ImGui::Combo("Full Particle Presets", (int*)&l_cfg.rectParticlePreset, "None\0Red To Yellow Fade\0Red To Transparent Fade\0Yellow To Green Fade\0Yellow To Transparent Fade\0Blue To Cyan Fade\0Blue To Transparent Fade\0Fire Fade\0Smoke Puff\0Spark Ember\0Explosion Debris\0Rainbow Cycle\0Rain Streak\0\0")) {
 					switch (l_cfg.rectParticlePreset) {
 					case RectParticlePreset::RED_TO_YELLOW_FADE_OUT:
-						ApplyParticlePreset(RED_TO_YELLOW_FADE_OUT);
+						l_cfg.ApplyParticlePreset(RED_TO_YELLOW_FADE_OUT);
 						break;
 					case RectParticlePreset::RED_TO_TRANSPARENT_FADE_OUT:
-						ApplyParticlePreset(RED_TO_TRANSPARENT_FADE_OUT);
+						l_cfg.ApplyParticlePreset(RED_TO_TRANSPARENT_FADE_OUT);
 						break;
 					case RectParticlePreset::YELLOW_TO_GREEN_FADE_OUT:
-						ApplyParticlePreset(YELLOW_TO_GREEN_FADE_OUT);
+						l_cfg.ApplyParticlePreset(YELLOW_TO_GREEN_FADE_OUT);
 						break;
 					case RectParticlePreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
-						ApplyParticlePreset(YELLOW_TO_TRANSPARENT_FADE_OUT);
+						l_cfg.ApplyParticlePreset(YELLOW_TO_TRANSPARENT_FADE_OUT);
 						break;
 					case RectParticlePreset::BLUE_TO_CYAN_FADE_OUT:
-						ApplyParticlePreset(BLUE_TO_CYAN_FADE_OUT);
+						l_cfg.ApplyParticlePreset(BLUE_TO_CYAN_FADE_OUT);
 						break;
 					case RectParticlePreset::BLUE_TO_TRANSPARENT_FADE_OUT:
-						ApplyParticlePreset(BLUE_TO_TRANSPARENT_FADE_OUT);
+						l_cfg.ApplyParticlePreset(BLUE_TO_TRANSPARENT_FADE_OUT);
 						break;
 					case RectParticlePreset::FIRE_FADE_OUT:
-						ApplyParticlePreset(FIRE_FADE_OUT);
+						l_cfg.ApplyParticlePreset(FIRE_FADE_OUT);
 						break;
 					case RectParticlePreset::SMOKE_PUFF:
-						ApplyParticlePreset(SMOKE_PUFF);
+						l_cfg.ApplyParticlePreset(SMOKE_PUFF);
 						break;
 					case RectParticlePreset::SPARK_EMBER:
-						ApplyParticlePreset(SPARK_EMBER);
+						l_cfg.ApplyParticlePreset(SPARK_EMBER);
 						break;
 					case RectParticlePreset::EXPLOSION_DEBRIS:
-						ApplyParticlePreset(EXPLOSION_DEBRIS);
+						l_cfg.ApplyParticlePreset(EXPLOSION_DEBRIS);
 						break;
 					case RectParticlePreset::RAINBOW_CYCLE:
-						ApplyParticlePreset(RAINBOW_CYCLE);
+						l_cfg.ApplyParticlePreset(RAINBOW_CYCLE);
 						break;
 					case RectParticlePreset::RAIN_STREAK:
-						ApplyParticlePreset(RAIN_STREAK);
+						l_cfg.ApplyParticlePreset(RAIN_STREAK);
 						break;
 					case RectParticlePreset::NONE:
 					default:
@@ -610,20 +573,20 @@ namespace Particles {
 
 				if (ImGui::TreeNode("Transform")) {
 					if (ImGui::Button("Random Transform")) {
-						l_cfg.defaultParticle.rp_transform = ParticleTransform::CreateRandomTransform();
+						l_cfg.defaultParticle.transform = ParticleTransform::CreateRandomTransform();
 					}
 					ImGui::SameLine();
 					if (ImGui::Button("Center in Viewport"))
 					{
-						l_cfg.defaultParticle.rp_transform.p_position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
+						l_cfg.defaultParticle.transform.position = ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f);
 					}
 					if (ImGui::Combo("Transform Preset", (int*)&l_cfg.transformPreset, "None\0Small Floating\0Explosion Chunks\0\0")) {
 						switch (l_cfg.transformPreset) {
 						case ParticleTransformPreset::SMALL_FLOATING:
-							ApplyTransformPreset(ParticleTransform::SMALL_FLOATING);
+							l_cfg.ApplyTransformPreset(ParticleTransform::SMALL_FLOATING);
 							break;
 						case ParticleTransformPreset::EXPLOSION_CHUNK:
-							ApplyTransformPreset(ParticleTransform::EXPLOSION_CHUNK);
+							l_cfg.ApplyTransformPreset(ParticleTransform::EXPLOSION_CHUNK);
 							break;
 						case ParticleTransformPreset::NONE:
 						default:
@@ -632,34 +595,34 @@ namespace Particles {
 						}
 					}
 
-					ImGui::DragFloat2("Position", (float*)&l_cfg.defaultParticle.rp_transform.p_position, l_cfg.drag, 0.0f, l_cfg.view_size.x);
-					ImGui::DragFloat2("Size", (float*)&l_cfg.defaultParticle.rp_transform.p_size, l_cfg.drag, 1.0f, l_cfg.view_size.x);
-					ImGui::Checkbox("Random Size", &l_cfg.defaultParticle.rp_transform.p_randomSize);
-					ImGui::Checkbox("Random Rotation", &l_cfg.defaultParticle.rp_transform.p_randomRotation);
-					ImGui::DragFloat("Rotation", &l_cfg.defaultParticle.rp_transform.p_rotation.x, 1.0f, 0.0f, 360.0f);
+					ImGui::DragFloat2("Position", (float*)&l_cfg.defaultParticle.transform.position, l_cfg.drag, 0.0f, l_cfg.view_size.x);
+					ImGui::DragFloat2("Size", (float*)&l_cfg.defaultParticle.transform.size, l_cfg.drag, 1.0f, l_cfg.view_size.x);
+					ImGui::Checkbox("Random Size", &l_cfg.defaultParticle.transform.randomSize);
+					ImGui::Checkbox("Random Rotation", &l_cfg.defaultParticle.transform.randomRotation);
+					ImGui::DragFloat("Rotation", &l_cfg.defaultParticle.transform.rotation.x, 1.0f, 0.0f, 360.0f);
 					ImGui::TreePop();
 				}
 
 				if (ImGui::TreeNode("Animation")) {
 					if (ImGui::Button("Random Animation")) {
-						l_cfg.defaultParticle.rp_animation = ParticleAnimation2D::CreateRandomAnimation2D();
+						l_cfg.defaultParticle.animation = ParticleAnimation2D::CreateRandomAnimation2D();
 					}
 					if (ImGui::Combo("Animation Preset", (int*) &l_cfg.animationPreset, "None\0Small Rising\0Explosion\0Drifting\0Spinning\0Lightweight Drifting\0\0")) {
 						switch (l_cfg.animationPreset) {
 						case ParticleAnimation2DPreset::SMALL_RISING:
-							ApplyAnimationPreset(ParticleAnimation2D::SMALL_RISING);
+							l_cfg.ApplyAnimationPreset(ParticleAnimation2D::SMALL_RISING);
 							break;
 						case ParticleAnimation2DPreset::EXPLOSION:
-							ApplyAnimationPreset(ParticleAnimation2D::EXPLOSION);
+							l_cfg.ApplyAnimationPreset(ParticleAnimation2D::EXPLOSION);
 							break;
 						case ParticleAnimation2DPreset::DRIFTING:
-							ApplyAnimationPreset(ParticleAnimation2D::DRIFTING);
+							l_cfg.ApplyAnimationPreset(ParticleAnimation2D::DRIFTING);
 							break;
 						case ParticleAnimation2DPreset::SPINNING:
-							ApplyAnimationPreset(ParticleAnimation2D::SPINNING);
+							l_cfg.ApplyAnimationPreset(ParticleAnimation2D::SPINNING);
 							break;
 						case ParticleAnimation2DPreset::LIGHTWIEGHT_DRIFT:
-							ApplyAnimationPreset(ParticleAnimation2D::LIGHTWIEGHT_DRIFT);
+							l_cfg.ApplyAnimationPreset(ParticleAnimation2D::LIGHTWIEGHT_DRIFT);
 							break;
 						case ParticleAnimation2DPreset::NONE:
 						default:
@@ -667,98 +630,53 @@ namespace Particles {
 							break;
 						}
 					}
-					ImGui::DragFloat2("Velocity Dir", (float*)&l_cfg.defaultParticle.rp_animation.p_velocity, l_cfg.drag, -10.0f, 10.0f);
-					ImGui::DragFloat("Speed", &l_cfg.defaultParticle.rp_animation.p_movementSpeed, l_cfg.drag, 0.0f, 2000.0f);
-					ImGui::Checkbox("Can Move", &l_cfg.defaultParticle.rp_animation.canMove);
-					ImGui::Checkbox("Can Rotate", &l_cfg.defaultParticle.rp_animation.canRotate);
-					ImGui::DragFloat("Rotation Speed", &l_cfg.defaultParticle.rp_animation.p_rotationSpeed, 0.1f, -1000.0f, 1000.0f);
+					ImGui::DragFloat2("Velocity Dir", (float*)&l_cfg.defaultParticle.animation.p_velocity, l_cfg.drag, -10.0f, 10.0f);
+					ImGui::DragFloat("Speed", &l_cfg.defaultParticle.animation.p_movementSpeed, l_cfg.drag, 0.0f, 2000.0f);
+					ImGui::Checkbox("Can Move", &l_cfg.defaultParticle.animation.canMove);
+					ImGui::Checkbox("Can Rotate", &l_cfg.defaultParticle.animation.canRotate);
+					ImGui::DragFloat("Rotation Speed", &l_cfg.defaultParticle.animation.p_rotationSpeed, 0.1f, -1000.0f, 1000.0f);
 					ImGui::TreePop();
 				}
 
 				if (ImGui::TreeNode("Color")) {
 					if (ImGui::Button("Random Color")) {
-						l_cfg.defaultParticle.rp_colorData = ParticleColor::CreateRandomColor();
+						l_cfg.defaultParticle.color = ParticleColor::CreateRandomColor();
 					}
 					ImGui::SameLine();
 					if (ImGui::Button("Random Start Color")) {
-						l_cfg.defaultParticle.rp_colorData.p_startColor = ParticleColor::CreateRandomColor().p_startColor;
+						l_cfg.defaultParticle.color.startColor = ParticleColor::CreateRandomColor().startColor;
 					}
 					ImGui::SameLine();
 					if (ImGui::Button("Random End Color")) {
-						l_cfg.defaultParticle.rp_colorData.p_endColor = ParticleColor::CreateRandomColor().p_endColor;
+						l_cfg.defaultParticle.color.endColor = ParticleColor::CreateRandomColor().endColor;
 					}
 					if (ImGui::Combo("Color Preset", (int*)&l_cfg.colorPreset, "None\0Red to Yellow Fade\0Red to Blue Fade\0Red to Transparent Fade\0Orange to Yellow Fade\0Orange to Transparent Fade\0Yellow to Green Fade\0Yellow to Transparent Fade\0Blue to Cyan Fade\0Blue to Transparent Fade\0Fire Fade Out\0Ice Fade Out\0Toxic Fade Out\0Magic Purple Fade Out\0\0")) {
-						switch (l_cfg.colorPreset) {
-						case ParticleColorPreset::RED_TO_YELLOW_FADE_OUT:
-							ApplyColorPreset(ParticleColor::RED_TO_YELLOW_FADE_OUT);
-							break;
-						case ParticleColorPreset::RED_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(ParticleColor::RED_TO_TRANSPARENT_FADE_OUT);
-							break;
-						case ParticleColorPreset::RED_TO_BLUE_FADE_OUT:
-							ApplyColorPreset(ParticleColor::RED_TO_BLUE_FADE_OUT);
-							break;
-						case ParticleColorPreset::ORANGE_TO_YELLOW_FADE_OUT:
-							ApplyColorPreset(ParticleColor::ORANGE_TO_YELLOW_FADE_OUT);
-							break;
-						case ParticleColorPreset::ORANGE_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(ParticleColor::ORANGE_TO_TRANSPARENT_FADE_OUT);
-							break;
-						case ParticleColorPreset::YELLOW_TO_GREEN_FADE_OUT:
-							ApplyColorPreset(ParticleColor::YELLOW_TO_GREEN_FADE_OUT);
-							break;
-						case ParticleColorPreset::YELLOW_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(ParticleColor::YELLOW_TO_TRANSPARENT_FADE_OUT);
-							break;
-						case ParticleColorPreset::BLUE_TO_CYAN_FADE_OUT:
-							ApplyColorPreset(ParticleColor::BLUE_TO_CYAN_FADE_OUT);
-							break;
-						case ParticleColorPreset::BLUE_TO_TRANSPARENT_FADE_OUT:
-							ApplyColorPreset(ParticleColor::BLUE_TO_TRANSPARENT_FADE_OUT);
-							break;
-						case ParticleColorPreset::FIRE_FADE_OUT:
-							ApplyColorPreset(ParticleColor::FIRE_FADE_OUT);
-							break;
-						case ParticleColorPreset::ICE_FADE_OUT:
-							ApplyColorPreset(ParticleColor::ICE_FADE_OUT);
-							break;
-						case ParticleColorPreset::TOXIC_FADE_OUT:
-							ApplyColorPreset(ParticleColor::TOXIC_FADE_OUT);
-							break;
-						case ParticleColorPreset::MAGIC_PURPLE_FADE_OUT:
-							ApplyColorPreset(ParticleColor::MAGIC_PURPLE_FADE_OUT);
-							break;
-						case ParticleColorPreset::NONE:
-						default:
-							// do nothing
-							break;
-						}
-
+						RectParticleUtils::ApplyColorPreset(l_cfg.defaultParticle, l_cfg.colorPreset);
 					}
-					ImGui::ColorEdit4("Start Color", (float*)&l_cfg.defaultParticle.rp_colorData.p_startColor);
-					ImGui::ColorEdit4("End Color", (float*)&l_cfg.defaultParticle.rp_colorData.p_endColor);
-					ImGui::Checkbox("Lerp Color", &l_cfg.defaultParticle.rp_colorData.p_lerpColor);
-					ImGui::DragFloat("Lerp Speed", &l_cfg.defaultParticle.rp_colorData.p_lerpSpeed, l_cfg.drag, 0.0f, 5.0f);
+					ImGui::ColorEdit4("Start Color", (float*)&l_cfg.defaultParticle.color.startColor);
+					ImGui::ColorEdit4("End Color", (float*)&l_cfg.defaultParticle.color.endColor);
+					ImGui::Checkbox("Lerp Color", &l_cfg.defaultParticle.color.lerpColor);
+					ImGui::DragFloat("Lerp Speed", &l_cfg.defaultParticle.color.lerpSpeed, l_cfg.drag, 0.0f, 5.0f);
 					ImGui::TreePop();
 				}
 
 				if (ImGui::TreeNode("Lifetime")) {
 					if (ImGui::Button("Random Lifetime")) {
-						l_cfg.defaultParticle.rp_lifetimeData = ParticleLifetime::CreateRandomLifetime();
+						l_cfg.defaultParticle.lifetime = ParticleLifetime::CreateRandomLifetime();
 					}
 					if (ImGui::Combo("Lifetime Preset", (int*)&l_cfg.lifetimePreset, "None\0Short Burst\0Medium Burst\0Long Burst\0Long Floating\0\0")) {
 						switch (l_cfg.lifetimePreset) {
 						case ParticleLifetimePreset::SHORT_BURST:
-							ApplyLifetimePreset(ParticleLifetime::SHORT_BURST);
+							l_cfg.ApplyLifetimePreset(ParticleLifetime::SHORT_BURST);
 							break;
 						case ParticleLifetimePreset::MEDIUM_BURST:
-							ApplyLifetimePreset(ParticleLifetime::MEDIUM_BURST);
+							l_cfg.ApplyLifetimePreset(ParticleLifetime::MEDIUM_BURST);
 							break;
 						case ParticleLifetimePreset::LONG_BURST:
-							ApplyLifetimePreset(ParticleLifetime::LONG_BURST);
+							l_cfg.ApplyLifetimePreset(ParticleLifetime::LONG_BURST);
 							break;
 						case ParticleLifetimePreset::LONG_FLOATING:
-							ApplyLifetimePreset(ParticleLifetime::LONG_FLOATING);			
+							l_cfg.ApplyLifetimePreset(ParticleLifetime::LONG_FLOATING);
 							break;
 						case ParticleLifetimePreset::NONE:
 						default:
@@ -766,8 +684,8 @@ namespace Particles {
 							break;
 						}
 					}
-					ImGui::DragFloat("Max Lifetime", &l_cfg.defaultParticle.rp_lifetimeData.p_maxLifetime, 0.01f, 0.01f, 60.0f);
-					ImGui::Checkbox("Randomize Lifetime", &l_cfg.defaultParticle.rp_lifetimeData.p_randomizeLifetime);
+					ImGui::DragFloat("Max Lifetime", &l_cfg.defaultParticle.lifetime.maxLifetime, 0.01f, 0.01f, 60.0f);
+					ImGui::Checkbox("Randomize Lifetime", &l_cfg.defaultParticle.lifetime.randomizeLifetime);
 					ImGui::TreePop();
 				}
 

@@ -8,17 +8,17 @@ namespace Particles {
 		EXPLOSION_CHUNK
 	};
 	struct ParticleTransform {
-		ImVec2 p_position = ImVec2(0.0f, 0.0f);
-		ImVec2 p_center = ImVec2(0.0f, 0.0f);
+		ImVec2 position = ImVec2(0.0f, 0.0f);
+		ImVec2 center = ImVec2(0.0f, 0.0f);
 
-		ImVec2 p_size = ImVec2(10.0f, 10.0f);
-		ImVec2 p_baseSize = ImVec2(10.0f, 10.0f); // store base size to compute non-destructive scaling each frame
-		ImVec2 p_rotation = ImVec2(67.0f, 0.0f); // using x as angle in degrees for 2D rotation
+		ImVec2 size = ImVec2(10.0f, 10.0f);
+		ImVec2 baseSize = ImVec2(10.0f, 10.0f); // store base size to compute non-destructive scaling each frame
+		ImVec2 rotation = ImVec2(67.0f, 0.0f); // using x as angle in degrees for 2D rotation
 
 		/// TODO: reevaluate these randomization flags
-		bool p_randomPosition = false;
-		bool p_randomSize = false;
-		bool p_randomRotation = false;
+		bool randomPosition = false;
+		bool randomSize = false;
+		bool randomRotation = false;
 
 		static const ParticleTransform DEFAULT_TRANSFORM;
 		static ParticleTransform CreateRandomTransform();

@@ -50,7 +50,7 @@ namespace Particles {
 
         void SetPosition(const ImVec2& viewSize, const ImVec2& pos) {
 			SetViewportSize(viewSize);
-			system.emitterParticle.rp_transform.p_position = pos;
+			system.emitterParticle.transform.position = pos;
         }
 
         void SetViewportSize(const ImVec2& viewSize) {
@@ -94,21 +94,21 @@ namespace Particles {
                     //system.activeParticles.push_back(RectParticleUtils::
                     //    CreateRandomParticle(system.viewSize, emitterPosition, &system.spawnParticle));
 
-					system.activeParticles.push_back(RectParticleUtils::CreateParticle(system.emitterParticle.rp_transform, system.emitterParticle.rp_colorData, system.emitterParticle.rp_lifetimeData));
+					system.activeParticles.push_back(RectParticleUtils::CreateParticle(system.emitterParticle.transform, system.emitterParticle.color, system.emitterParticle.lifetime));
 
                     break;
                 case EmissionMode::EMIT_BURST_DEFUALT:
                     //system.activeParticles.push_back(RectParticleUtils::
                     //    CreateDefaultParticle(system.viewSize, emitterPosition, &system.spawnParticle));
 
-					system.activeParticles.push_back(RectParticleUtils::CreateParticle(system.emitterParticle.rp_transform, system.emitterParticle.rp_colorData, system.emitterParticle.rp_lifetimeData));
+					system.activeParticles.push_back(RectParticleUtils::CreateParticle(system.emitterParticle.transform, system.emitterParticle.color, system.emitterParticle.lifetime));
 
                     break;
                 case EmissionMode::EMIT_BURST_RANDOM:
                     //system.activeParticles.push_back(RectParticleUtils::
                     //    CreateRandomParticle(system.viewSize, emitterPosition, &system.spawnParticle));
 
-					system.activeParticles.push_back(RectParticleUtils::CreateParticle(system.emitterParticle.rp_transform, system.emitterParticle.rp_colorData, system.emitterParticle.rp_lifetimeData));
+					system.activeParticles.push_back(RectParticleUtils::CreateParticle(system.emitterParticle.transform, system.emitterParticle.color, system.emitterParticle.lifetime));
 
                     break;
                 }
@@ -189,17 +189,17 @@ namespace Particles {
 		void EmitAt(const ImVec2& pos, int count)
 		{
 			for (int i = 0; i < count; ++i) {
-				RectParticle p = RectParticleUtils::CreateParticle(rp_emitter.system.spawnParticle.rp_transform, rp_emitter.system.spawnParticle.rp_colorData, rp_emitter.system.spawnParticle.rp_lifetimeData);
+				RectParticle p = RectParticleUtils::CreateParticle(rp_emitter.system.spawnParticle.transform, rp_emitter.system.spawnParticle.color, rp_emitter.system.spawnParticle.lifetime);
 
 				// If emitter is circular, offset particle randomly
 				if (emitterShape == EmitterShape::Circle && emitterSpawnRadius > 0.0f) {
 					float angle = (static_cast<float>(rand()) / RAND_MAX) * 2.0f * 3.14159265f;
 					float radius = sqrtf(static_cast<float>(rand()) / RAND_MAX) * emitterSpawnRadius;
 					ImVec2 offset = ImVec2(cosf(angle) * radius, sinf(angle) * radius);
-					p.rp_transform.p_position = ImVec2(pos.x + offset.x, pos.y + offset.y);
+					p.transform.position = ImVec2(pos.x + offset.x, pos.y + offset.y);
 				}
 				else {
-					p.rp_transform.p_position = pos;
+					p.transform.position = pos;
 				}
 
 				rp_emitter.system.activeParticles.push_back(std::move(p));
@@ -234,39 +234,39 @@ namespace Particles {
 			if (ImGui::TreeNode("Default Particle")) {
 
 				if (ImGui::Button("Center in Viewport")) {
-					defaultParticle.rp_transform.p_position = ImVec2(p_layer->view_size.x / 2.0f, p_layer->view_size.y / 2.0f);
-					emitter.SetPosition(p_layer->view_size, defaultParticle.rp_transform.p_position);
+					defaultParticle.transform.position = ImVec2(p_layer->view_size.x / 2.0f, p_layer->view_size.y / 2.0f);
+					emitter.SetPosition(p_layer->view_size, defaultParticle.transform.position);
 				}
 
 				if (ImGui::TreeNode("Transform")) {
-					ImGui::DragFloat2("Position", (float*)&defaultParticle.rp_transform.p_position, sliderSpeed, 0.0f, p_layer->view_size.x);
-					ImGui::DragFloat2("Size", (float*)&defaultParticle.rp_transform.p_size, sliderSpeed, 1.0f, p_layer->view_size.x);
-					ImGui::Checkbox("Random Size", &defaultParticle.rp_transform.p_randomSize);
-					ImGui::Checkbox("Random Rotation", &defaultParticle.rp_transform.p_randomRotation);
-					ImGui::DragFloat("Rotation", &defaultParticle.rp_transform.p_rotation.x, 1.0f, 0.0f, 360.0f);
+					ImGui::DragFloat2("Position", (float*)&defaultParticle.transform.position, sliderSpeed, 0.0f, p_layer->view_size.x);
+					ImGui::DragFloat2("Size", (float*)&defaultParticle.transform.size, sliderSpeed, 1.0f, p_layer->view_size.x);
+					ImGui::Checkbox("Random Size", &defaultParticle.transform.randomSize);
+					ImGui::Checkbox("Random Rotation", &defaultParticle.transform.randomRotation);
+					ImGui::DragFloat("Rotation", &defaultParticle.transform.rotation.x, 1.0f, 0.0f, 360.0f);
 					ImGui::TreePop();
 				}
 
 				if (ImGui::TreeNode("Animation")) {
-					ImGui::DragFloat2("Velocity Dir", (float*)&defaultParticle.rp_animation.p_velocity, sliderSpeed, -10.0f, 10.0f);
-					ImGui::DragFloat("Speed", &defaultParticle.rp_animation.p_movementSpeed, sliderSpeed, 0.0f, 2000.0f);
-					ImGui::Checkbox("Can Move", &defaultParticle.rp_animation.canMove);
-					ImGui::Checkbox("Can Rotate", &defaultParticle.rp_animation.canRotate);
-					ImGui::DragFloat("Rotation Speed", &defaultParticle.rp_animation.p_rotationSpeed, 0.1f, -1000.0f, 1000.0f);
+					ImGui::DragFloat2("Velocity Dir", (float*)&defaultParticle.animation.p_velocity, sliderSpeed, -10.0f, 10.0f);
+					ImGui::DragFloat("Speed", &defaultParticle.animation.p_movementSpeed, sliderSpeed, 0.0f, 2000.0f);
+					ImGui::Checkbox("Can Move", &defaultParticle.animation.canMove);
+					ImGui::Checkbox("Can Rotate", &defaultParticle.animation.canRotate);
+					ImGui::DragFloat("Rotation Speed", &defaultParticle.animation.p_rotationSpeed, 0.1f, -1000.0f, 1000.0f);
 					ImGui::TreePop();
 				}
 
 				if (ImGui::TreeNode("Color")) {
-					ImGui::ColorEdit4("Start Color", (float*)&defaultParticle.rp_colorData.p_startColor);
-					ImGui::ColorEdit4("End Color", (float*)&defaultParticle.rp_colorData.p_endColor);
-					ImGui::Checkbox("Lerp Color", &defaultParticle.rp_colorData.p_lerpColor);
-					ImGui::DragFloat("Lerp Speed", &defaultParticle.rp_colorData.p_lerpSpeed, sliderSpeed, 0.0f, 5.0f);
+					ImGui::ColorEdit4("Start Color", (float*)&defaultParticle.color.startColor);
+					ImGui::ColorEdit4("End Color", (float*)&defaultParticle.color.endColor);
+					ImGui::Checkbox("Lerp Color", &defaultParticle.color.lerpColor);
+					ImGui::DragFloat("Lerp Speed", &defaultParticle.color.lerpSpeed, sliderSpeed, 0.0f, 5.0f);
 					ImGui::TreePop();
 				}
 
 				if (ImGui::TreeNode("Lifetime")) {
-					ImGui::DragFloat("Max Lifetime", &defaultParticle.rp_lifetimeData.p_maxLifetime, 0.01f, 0.01f, 60.0f);
-					ImGui::Checkbox("Randomize Lifetime", &defaultParticle.rp_lifetimeData.p_randomizeLifetime);
+					ImGui::DragFloat("Max Lifetime", &defaultParticle.lifetime.maxLifetime, 0.01f, 0.01f, 60.0f);
+					ImGui::Checkbox("Randomize Lifetime", &defaultParticle.lifetime.randomizeLifetime);
 					ImGui::TreePop();
 				}
 

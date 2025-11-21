@@ -48,7 +48,45 @@ namespace Particles {
 		ParticleLifetimePreset lifetimePreset = ParticleLifetimePreset::MEDIUM_BURST;
 		ParticleTransformPreset transformPreset = ParticleTransformPreset::NONE;
 		RectParticlePreset rectParticlePreset = RectParticlePreset::NONE;
+
+		void ApplyColorPreset(const ParticleColor& presetData) {
+			defaultParticle.color.startColor = presetData.startColor;
+			defaultParticle.color.endColor = presetData.endColor;
+			defaultParticle.color.lerpSpeed = presetData.lerpSpeed;
+			defaultParticle.color.lerpColor = presetData.lerpColor;
+		}
+
+		void ApplyLifetimePreset(const ParticleLifetime& presetData) {
+			defaultParticle.lifetime.maxLifetime = presetData.maxLifetime;
+			defaultParticle.lifetime.randomizeLifetime = presetData.randomizeLifetime;
+		}
+
+		void ApplyTransformPreset(const ParticleTransform& presetData) {
+			//defaultParticle.rp_transform.p_position = presetData.p_position;
+			defaultParticle.transform.size = presetData.size;
+			defaultParticle.transform.randomSize = presetData.randomSize;
+			defaultParticle.transform.randomRotation = presetData.randomRotation;
+			defaultParticle.transform.rotation = presetData.rotation;
+		}
+
+		void ApplyAnimationPreset(const ParticleAnimation2D& presetData) {
+			defaultParticle.animation.p_velocity = presetData.p_velocity;
+			defaultParticle.animation.p_movementSpeed = presetData.p_movementSpeed;
+			defaultParticle.animation.p_rotationSpeed = presetData.p_rotationSpeed;
+			defaultParticle.animation.p_scaleSpeed = presetData.p_scaleSpeed;
+			defaultParticle.animation.canMove = presetData.canMove;
+			defaultParticle.animation.canRotate = presetData.canRotate;
+			defaultParticle.animation.canScale = presetData.canScale;
+		}
+
+		void ApplyParticlePreset(const RectParticle& presetData) {
+			ApplyTransformPreset(presetData.transform);
+			ApplyColorPreset(presetData.color);
+			ApplyLifetimePreset(presetData.lifetime);
+			ApplyAnimationPreset(presetData.animation);
+		}
     };
+
 
     // Global config instance
     inline LayerConfig& GetLayerConfig()

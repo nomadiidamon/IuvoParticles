@@ -19,15 +19,15 @@ namespace Particles {
 		MAGIC_PURPLE_FADE_OUT
 	};
 	struct ParticleColor {
-		ImVec4 p_startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-		ImVec4 p_endColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-		ImVec4 p_currColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-		float  p_lerpSpeed = 0.25f;
+		ImVec4 startColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		ImVec4 endColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+		ImVec4 currColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		float  lerpSpeed = 0.25f;
 
-		bool p_lerpColor = true;
-		bool p_fadeColor = true;
-		bool p_useAlpha = true;
-		bool p_randomizeColor = false;
+		bool lerpColor = true;
+		bool fadeColor = true;
+		bool useAlpha = true;
+		bool randomizeColor = false;
 
 		static const ParticleColor DEFAULT_COLOR;
 
@@ -53,11 +53,11 @@ namespace Particles {
 
 		ImVec4 startColorMin = ImVec4(0.1f, 0.1f, 0.1f, 0.1f);
 		ImVec4 startColorMax = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-		ImVec4 defaultStartColor = ParticleColor::ICE_FADE_OUT.p_startColor;
+		ImVec4 defaultStartColor = ParticleColor::ICE_FADE_OUT.startColor;
 
 		ImVec4 endColorMin = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 		ImVec4 endColorMax = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-		ImVec4 defaultEndColor = ParticleColor::TOXIC_FADE_OUT.p_startColor;
+		ImVec4 defaultEndColor = ParticleColor::TOXIC_FADE_OUT.startColor;
 		ImVec4 defaultCurrColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
 
 

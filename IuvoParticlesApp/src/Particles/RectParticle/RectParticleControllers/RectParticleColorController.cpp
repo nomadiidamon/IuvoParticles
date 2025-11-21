@@ -4,7 +4,7 @@
 namespace Particles {
 
 	void RectParticleColorController::UpdateColor(RectParticle& particle, float& lifetimeRatio) {
-		if (particle.rp_colorData.p_lerpColor) {
+		if (particle.color.lerpColor) {
 			LerpColor(particle);
 		}
 		else {
@@ -13,21 +13,21 @@ namespace Particles {
 	}
 
 	ImU32 RectParticleColorController::FadeColor(RectParticle& particle) {
-		float lifeRatio = particle.rp_lifetimeData.p_lifetime / std::max(1e-6f, particle.rp_lifetimeData.p_maxLifetime);
-		if (particle.rp_colorData.p_useAlpha) {
-			particle.rp_colorData.p_currColor.w = 1.0f - lifeRatio;
+		float lifeRatio = particle.lifetime.lifetime / std::max(1e-6f, particle.lifetime.maxLifetime);
+		if (particle.color.useAlpha) {
+			particle.color.currColor.w = 1.0f - lifeRatio;
 		}
-		return ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
+		return ImGui::ColorConvertFloat4ToU32(particle.color.currColor);
 	}
 
 	ImU32 RectParticleColorController::LerpColor(RectParticle& particle) {
-		float lifeRatio = particle.rp_lifetimeData.p_lifetime / std::max(1e-6f, particle.rp_lifetimeData.p_maxLifetime);
-		particle.rp_colorData.p_currColor = ImVec4(
-			particle.rp_colorData.p_startColor.x + (particle.rp_colorData.p_endColor.x - particle.rp_colorData.p_startColor.x) * lifeRatio,
-			particle.rp_colorData.p_startColor.y + (particle.rp_colorData.p_endColor.y - particle.rp_colorData.p_startColor.y) * lifeRatio,
-			particle.rp_colorData.p_startColor.z + (particle.rp_colorData.p_endColor.z - particle.rp_colorData.p_startColor.z) * lifeRatio,
-			particle.rp_colorData.p_useAlpha ? (particle.rp_colorData.p_startColor.w + (particle.rp_colorData.p_endColor.w - particle.rp_colorData.p_startColor.w) * lifeRatio) : 1.0f
+		float lifeRatio = particle.lifetime.lifetime / std::max(1e-6f, particle.lifetime.maxLifetime);
+		particle.color.currColor = ImVec4(
+			particle.color.startColor.x + (particle.color.endColor.x - particle.color.startColor.x) * lifeRatio,
+			particle.color.startColor.y + (particle.color.endColor.y - particle.color.startColor.y) * lifeRatio,
+			particle.color.startColor.z + (particle.color.endColor.z - particle.color.startColor.z) * lifeRatio,
+			particle.color.useAlpha ? (particle.color.startColor.w + (particle.color.endColor.w - particle.color.startColor.w) * lifeRatio) : 1.0f
 		);
-		return ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
+		return ImGui::ColorConvertFloat4ToU32(particle.color.currColor);
 	}
 }

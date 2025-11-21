@@ -16,7 +16,7 @@ namespace Particles {
 				return;
 			}
 
-			bool rotated = (particle.rp_animation.canRotate && particle.rp_transform.p_rotation.x != 0.0f);
+			bool rotated = (particle.animation.canRotate && particle.transform.rotation.x != 0.0f);
 			if (rotated ? RectParticleMotionController::HitBoundsRotated(particle, view_size)
 				: RectParticleMotionController::HitBounds(particle, view_size))
 			{
@@ -24,9 +24,9 @@ namespace Particles {
 				return;
 			}
 
-			if (particle.rp_animation.canMove) RectParticleMotionController::ApplyVelocity(particle, ts);
-			if (particle.rp_animation.canRotate) RectParticleRotationController::ApplyRotation(particle, ts);
-			if (particle.rp_animation.canScale) RectParticleScaleController::ApplyScale(particle,ts);
+			if (particle.animation.canMove) RectParticleMotionController::ApplyVelocity(particle, ts);
+			if (particle.animation.canRotate) RectParticleRotationController::ApplyRotation(particle, ts);
+			if (particle.animation.canScale) RectParticleScaleController::ApplyScale(particle,ts);
 			RectParticleLifetimeController::UpdateLifetime(particle, ts);
 			RectParticleColorController::UpdateColor(particle, lifetimeRatio);
 			UpdateCenter();
@@ -42,7 +42,7 @@ namespace Particles {
 
 			if (useDefaultParticle && defaultParticle) {
 				particle = RectParticleSpawner::FromTemplate(*defaultParticle);
-				particle.rp_lifetimeData.p_lifetime = 0.0f;
+				particle.lifetime.lifetime = 0.0f;
 				container.push_back(particle);
 				return;
 			}
@@ -51,15 +51,15 @@ namespace Particles {
 		}
 
 		void UpdateCenter() {
-			particle.rp_transform.p_center = ImVec2(particle.rp_transform.p_position.x + particle.rp_transform.p_size.x * 0.5f,
-				particle.rp_transform.p_position.y + particle.rp_transform.p_size.y * 0.5f);
+			particle.transform.center = ImVec2(particle.transform.position.x + particle.transform.size.x * 0.5f,
+				particle.transform.position.y + particle.transform.size.y * 0.5f);
 		}
 
 		void SetCenter(const ImVec2& newCenter) {
-			particle.rp_transform.p_center = newCenter;
-			particle.rp_transform.p_position = ImVec2(
-				newCenter.x - particle.rp_transform.p_size.x * 0.5f,
-				newCenter.y - particle.rp_transform.p_size.y * 0.5f
+			particle.transform.center = newCenter;
+			particle.transform.position = ImVec2(
+				newCenter.x - particle.transform.size.x * 0.5f,
+				newCenter.y - particle.transform.size.y * 0.5f
 			);
 		}
 

@@ -5,10 +5,10 @@
 namespace Particles {
 
 	struct RectParticle {
-		ParticleTransform rp_transform;
-		ParticleAnimation2D rp_animation;
-		ParticleColor rp_colorData;
-		ParticleLifetime rp_lifetimeData;
+		ParticleTransform transform;
+		ParticleAnimation2D animation;
+		ParticleColor color;
+		ParticleLifetime lifetime;
 		
 		static RectParticle RANDOM_PARTICLE();
 		static std::string ToString(const RectParticle& particle);

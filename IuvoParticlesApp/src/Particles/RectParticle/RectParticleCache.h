@@ -13,21 +13,21 @@ namespace Particles {
 
         void UpdateFromParticle(const RectParticle& particle) {
             // Lifetime ratio
-            cachedLifetimeRatio = particle.rp_lifetimeData.p_maxLifetime > 0.0f ?
-                particle.rp_lifetimeData.p_lifetime / particle.rp_lifetimeData.p_maxLifetime : 0.0f;
+            cachedLifetimeRatio = particle.lifetime.maxLifetime > 0.0f ?
+                particle.lifetime.lifetime / particle.lifetime.maxLifetime : 0.0f;
             cachedLifetimeRatio = std::clamp(cachedLifetimeRatio, 0.0f, 1.0f);
 
             // Expiration
-            isExpired = particle.rp_lifetimeData.p_lifetime >= particle.rp_lifetimeData.p_maxLifetime;
+            isExpired = particle.lifetime.lifetime >= particle.lifetime.maxLifetime;
 
             // Center
             cachedCenter = ImVec2(
-                particle.rp_transform.p_position.x + particle.rp_transform.p_size.x * 0.5f,
-                particle.rp_transform.p_position.y + particle.rp_transform.p_size.y * 0.5f
+                particle.transform.position.x + particle.transform.size.x * 0.5f,
+                particle.transform.position.y + particle.transform.size.y * 0.5f
             );
 
             // Color (already updated in utils update)
-            cachedColor = ImGui::ColorConvertFloat4ToU32(particle.rp_colorData.p_currColor);
+            cachedColor = ImGui::ColorConvertFloat4ToU32(particle.color.currColor);
 
             // Rotated corners
             RectParticleUtils::CalculateRotatedRectCorners(particle, cachedCorners);

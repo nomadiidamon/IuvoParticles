@@ -11,11 +11,11 @@ namespace Particles {
 		LONG_FLOATING
 	};
 	struct ParticleLifetime {
-		float p_lifetime = 0.0f;
-		float p_maxLifetime = 5.0f;
-		bool p_randomizeLifetime = false;
-		bool p_loop = false;
-		int p_loopCount = 0; // number of times the particle has looped
+		float lifetime = 0.0f;
+		float maxLifetime = 5.0f;
+		bool randomizeLifetime = false;
+		bool loop = false;
+		int loopCount = 0; // number of times the particle has looped
 
 		static const ParticleLifetime DEFAULT_LIFETIME;
 		static ParticleLifetime CreateRandomLifetime();

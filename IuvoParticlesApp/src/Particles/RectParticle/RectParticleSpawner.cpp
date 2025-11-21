@@ -5,15 +5,15 @@ namespace Particles {
 
 	RectParticle RectParticleSpawner::FromTemplate(const RectParticle& t) {
 		RectParticle out = t;
-		out.rp_transform.p_center = ImVec2(out.rp_transform.p_position.x + out.rp_transform.p_size.x * 0.5f,
-			out.rp_transform.p_position.y + out.rp_transform.p_size.y * 0.5f);
-		if (out.rp_transform.p_baseSize.x <= 0.0f || out.rp_transform.p_baseSize.y <= 0.0f)
-			out.rp_transform.p_baseSize = out.rp_transform.p_size;
+		out.transform.center = ImVec2(out.transform.position.x + out.transform.size.x * 0.5f,
+			out.transform.position.y + out.transform.size.y * 0.5f);
+		if (out.transform.baseSize.x <= 0.0f || out.transform.baseSize.y <= 0.0f)
+			out.transform.baseSize = out.transform.size;
 
 		// normalize rotation
-		out.rp_transform.p_rotation.x = fmodf(out.rp_transform.p_rotation.x, 360.0f);
-		if (out.rp_transform.p_rotation.x < 0.0f)
-			out.rp_transform.p_rotation.x += 360.0f;
+		out.transform.rotation.x = fmodf(out.transform.rotation.x, 360.0f);
+		if (out.transform.rotation.x < 0.0f)
+			out.transform.rotation.x += 360.0f;
 		return out;
 	}
 
