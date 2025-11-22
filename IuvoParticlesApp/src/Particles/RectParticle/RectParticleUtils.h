@@ -198,100 +198,6 @@ namespace Particles {
 				DrawParticleAgnostic(draw_list, particle, view_pos);
 			}
 		}
-		static void DrawParticleTextureAgnostic(ImDrawList* draw_list, const RectParticle& particle, ImTextureID texture_id, const ImVec2& view_pos) {
-			bool rotated = (particle.animation.canRotate && particle.transform.rotation.x != 0.0f);
-			if (rotated) {
-				DrawRotatingParticleTexture(draw_list, particle, texture_id, view_pos);
-			}
-			else {
-				DrawParticleTexture(draw_list, particle, texture_id, view_pos);
-			}
-		}
-		static void DrawParticleTexture(ImDrawList* draw_list, const RectParticle& particle, ImTextureID texture_id, const ImVec2& view_pos) {
-			ImU32 color = ImGui::GetColorU32(particle.color.currColor);
-			draw_list->AddImageQuad(
-				texture_id,
-				ImVec2(view_pos.x + particle.transform.position.x, view_pos.y + particle.transform.position.y),
-				ImVec2(view_pos.x + particle.transform.position.x + particle.transform.size.x, view_pos.y + particle.transform.position.y),
-				ImVec2(view_pos.x + particle.transform.position.x + particle.transform.size.x, view_pos.y + particle.transform.position.y + particle.transform.size.y),
-				ImVec2(view_pos.x + particle.transform.position.x, view_pos.y + particle.transform.position.y + particle.transform.size.y),
-				ImVec2(0.0f, 0.0f),
-				ImVec2(1.0f, 0.0f),
-				ImVec2(1.0f, 1.0f),
-				ImVec2(0.0f, 1.0f),
-				color
-			);
-		}
-		static void DrawRotatingParticleTexture(ImDrawList* draw_list, const RectParticle& particle, ImTextureID texture_id, const ImVec2& view_pos) {
-			ImU32 color = ImGui::GetColorU32(particle.color.currColor);
-			ImVec2 corners[4];
-			CalculateRotatedRectCorners(particle, corners);
-			for (int i = 0; i < 4; ++i) {
-				corners[i].x += view_pos.x;
-				corners[i].y += view_pos.y;
-			}
-			draw_list->AddImageQuad(
-				texture_id,
-				corners[0],
-				corners[1],
-				corners[2],
-				corners[3],
-				ImVec2(0.0f, 0.0f),
-				ImVec2(1.0f, 0.0f),
-				ImVec2(1.0f, 1.0f),
-				ImVec2(0.0f, 1.0f),
-				color
-			);
-		}
-		//static void DrawParticleTextureSheetAgnostic(ImDrawList* draw_list, const RectParticle& particle, ImTextureID texture_id, const ImVec2& view_pos) {
-		//	bool rotated = (particle.animation.canRotate && particle.transform.rotation.x != 0.0f);
-		//	if (rotated) {
-		//		DrawRotatingParticleTextureSheet(draw_list, particle, texture_id, view_pos);
-		//	}
-		//	else {
-		//		DrawParticleTextureSheet(draw_list, particle, texture_id, view_pos);
-		//	}
-		//}
-		//static void DrawParticleTextureSheet(ImDrawList* draw_list, const RectParticle& particle, ImTextureID texture_id, const ImVec2& view_pos) {
-		//	ImU32 color = ImGui::GetColorU32(particle.color.currColor);
-		//	ImVec2 uv0 = particle.animation.GetCurrentFrameUV0();
-		//	ImVec2 uv1 = particle.animation.GetCurrentFrameUV1();
-		//	draw_list->AddImageQuad(
-		//		texture_id,
-		//		ImVec2(view_pos.x + particle.transform.position.x, view_pos.y + particle.transform.position.y),
-		//		ImVec2(view_pos.x + particle.transform.position.x + particle.transform.size.x, view_pos.y + particle.transform.position.y),
-		//		ImVec2(view_pos.x + particle.transform.position.x + particle.transform.size.x, view_pos.y + particle.transform.position.y + particle.transform.size.y),
-		//		ImVec2(view_pos.x + particle.transform.position.x, view_pos.y + particle.transform.position.y + particle.transform.size.y),
-		//		uv0,
-		//		ImVec2(uv1.x, uv0.y),
-		//		uv1,
-		//		ImVec2(uv0.x, uv1.y),
-		//		color
-		//	);
-		//}
-		//static void DrawRotatingParticleTextureSheet(ImDrawList* draw_list, const RectParticle& particle, ImTextureID texture_id, const ImVec2& view_pos) {
-		//	ImU32 color = ImGui::GetColorU32(particle.color.currColor);
-		//	ImVec2 corners[4];
-		//	CalculateRotatedRectCorners(particle, corners);
-		//	for (int i = 0; i < 4; ++i) {
-		//		corners[i].x += view_pos.x;
-		//		corners[i].y += view_pos.y;
-		//	}
-		//	ImVec2 uv0 = particle.animation.GetCurrentFrameUV0();
-		//	ImVec2 uv1 = particle.animation.GetCurrentFrameUV1();
-		//	draw_list->AddImageQuad(
-		//		texture_id,
-		//		corners[0],
-		//		corners[1],
-		//		corners[2],
-		//		corners[3],
-		//		uv0,
-		//		ImVec2(uv1.x, uv0.y),
-		//		uv1,
-		//		ImVec2(uv0.x, uv1.y),
-		//		color
-		//	);
-		//}
 
 		/// Lifetime helpers
 		static bool IsExpired(const RectParticle& particle) {
@@ -318,8 +224,13 @@ namespace Particles {
 		}
 		static bool RemoveIfExists(std::vector<RectParticle>& particles, const RectParticle& target) {
 			if (ContainsParticle(particles, target)) {
+				particles.erase(std::remove_if(particles.begin(), particles.end(),
+					[&target](const RectParticle& p) {
+						return IsEqualKeyAttributes(p, target);
+					}), particles.end());	
 				return true;
 			}
+	
 			return false;
 		}
 		static void ClampParticleCount(std::vector<RectParticle>& particles, int maxCount, const ImVec2& /*view_size*/) {
@@ -399,7 +310,7 @@ namespace Particles {
 				ParticleAnimation2D::IsEqual(a.animation, b.animation);
 		}
 		static bool IsSameParticle(const RectParticle& a, const RectParticle& b) {
-			return (IsEqualKeyAttributes(a, b) && (&a == &b));
+			return (&a == &b);
 		}
 		static bool IsTrueDefaultParticle(const RectParticle& particle) {
 			return IsEqualKeyAttributes(particle, DEFAULT_RECT_PARTICLE);
@@ -414,7 +325,7 @@ namespace Particles {
 			return RectParticleSerializer::Deserialize(j);
 		}
 	private:
-		static class RectParticleSerializer : nlohmann::json {
+		static class RectParticleSerializer {
 		public:
 			static nlohmann::json Serialize(const RectParticle& particle) {
 				nlohmann::json j;
