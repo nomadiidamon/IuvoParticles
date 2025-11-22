@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "imgui.h"
+#include "../../json/src/json.hpp"
 #include "ParticleRandom.h"
 #include "ParticleConfig.h"
 

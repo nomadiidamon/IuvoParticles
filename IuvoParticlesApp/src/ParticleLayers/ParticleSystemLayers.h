@@ -503,6 +503,7 @@ namespace Particles {
 					if (ImGui::Button("Emit 50 at center")) {
 						p_layer->EmitAt(ImVec2(l_cfg.view_size.x / 2.0f, l_cfg.view_size.y / 2.0f), 50);
 					}
+
 					ImGui::TreePop();
 				}
 				ImGui::Separator();
@@ -607,7 +608,7 @@ namespace Particles {
 					if (ImGui::Button("Random Animation")) {
 						l_cfg.defaultParticle.animation = ParticleAnimation2D::CreateRandomAnimation2D();
 					}
-					if (ImGui::Combo("Animation Preset", (int*) &l_cfg.animationPreset, "None\0Small Rising\0Explosion\0Drifting\0Spinning\0Lightweight Drifting\0\0")) {
+					if (ImGui::Combo("Animation Preset", (int*)&l_cfg.animationPreset, "None\0Small Rising\0Explosion\0Drifting\0Spinning\0Lightweight Drifting\0\0")) {
 						switch (l_cfg.animationPreset) {
 						case ParticleAnimation2DPreset::SMALL_RISING:
 							l_cfg.ApplyAnimationPreset(ParticleAnimation2D::SMALL_RISING);
@@ -727,11 +728,11 @@ namespace Particles {
 					startEventTriggered = true;
 				}
 			}
-			
+
 			if (l_cfg.emitOnHover && l_cfg.isHovering) {
 				p_layer->EmitAt(l_cfg.mouse_pos, l_cfg.hoverBurstCount);
 			}
-			
+
 		}
 	};
 

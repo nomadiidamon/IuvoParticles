@@ -23,6 +23,7 @@ namespace Particles {
 		static const ParticleLifetime MEDIUM_BURST;
 		static const ParticleLifetime LONG_BURST;
 		static const ParticleLifetime LONG_FLOATING;
+		static bool IsEqual(const ParticleLifetime& a, const ParticleLifetime& b);
 	};
 	struct ParticleLifetimeRange {
 		bool enforceConstraints = false;
@@ -35,6 +36,12 @@ namespace Particles {
 		int minLoopCount = 0;
 		int maxLoopCount = 5;
 		static const ParticleLifetimeRange DEFAULT_LIFETIME_RANGE;
+	};
+
+	static class ParticleLifetimeSerializer : nlohmann::json {
+	public:
+		static nlohmann::json Serialize(const ParticleLifetime& lifetime);
+		static ParticleLifetime Deserialize(const nlohmann::json& j);
 	};
 
 

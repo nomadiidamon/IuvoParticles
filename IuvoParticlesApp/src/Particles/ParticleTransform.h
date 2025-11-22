@@ -1,5 +1,6 @@
 #pragma once 
 #include "imgui.h"
+#include "../../json/src/json.hpp"
 
 namespace Particles {
 	enum class ParticleTransformPreset {
@@ -24,6 +25,7 @@ namespace Particles {
 		static ParticleTransform CreateRandomTransform();
 		static const ParticleTransform SMALL_FLOATING;
 		static const ParticleTransform EXPLOSION_CHUNK;
+		static bool IsEqual(const ParticleTransform& a, const ParticleTransform& b);
 
 	};
 	struct ParticleTransformRange {
@@ -49,4 +51,12 @@ namespace Particles {
 
 		static const ParticleTransformRange DEFAULT_TRANSFORM_RANGE;
 	};
+
+	static class ParticleTransformSerializer : nlohmann::json {
+	public:
+		static nlohmann::json Serialize(const ParticleTransform& transform);
+		static ParticleTransform Deserialize(const nlohmann::json& j);
+
+	};
+
 }

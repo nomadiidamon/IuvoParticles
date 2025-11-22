@@ -66,4 +66,38 @@ namespace Particles {
 		false,
 		false
 	};
+	bool ParticleAnimation2D::IsEqual(const ParticleAnimation2D& a, const ParticleAnimation2D& b) {
+		return Particles::FloatEquals(a.p_velocity.x, b.p_velocity.x) &&
+			Particles::FloatEquals(a.p_velocity.y, b.p_velocity.y) &&
+			Particles::FloatEquals(a.p_movementSpeed, b.p_movementSpeed) &&
+			Particles::FloatEquals(a.p_rotationSpeed, b.p_rotationSpeed) &&
+			Particles::FloatEquals(a.p_scaleSpeed, b.p_scaleSpeed) &&
+			(a.canMove == b.canMove) &&
+			(a.canRotate == b.canRotate) &&
+			(a.canScale == b.canScale);
+	}
+
+
+	nlohmann::json ParticleAnimation2DSerializer::Serialize(const ParticleAnimation2D& animation) {
+		nlohmann::json j;
+		j["p_velocity"] = { animation.p_velocity.x, animation.p_velocity.y };
+		j["p_movementSpeed"] = animation.p_movementSpeed;
+		j["p_rotationSpeed"] = animation.p_rotationSpeed;
+		j["p_scaleSpeed"] = animation.p_scaleSpeed;
+		j["canMove"] = animation.canMove;
+		j["canRotate"] = animation.canRotate;
+		j["canScale"] = animation.canScale;
+		return j;
+	}
+	ParticleAnimation2D ParticleAnimation2DSerializer::Deserialize(const nlohmann::json& j) {
+		ParticleAnimation2D animation;
+		animation.p_velocity = ImVec2(j["p_velocity"][0], j["p_velocity"][1]);
+		animation.p_movementSpeed = j["p_movementSpeed"];
+		animation.p_rotationSpeed = j["p_rotationSpeed"];
+		animation.p_scaleSpeed = j["p_scaleSpeed"];
+		animation.canMove = j["canMove"];
+		animation.canRotate = j["canRotate"];
+		animation.canScale = j["canScale"];
+		return animation;
+	}
 }

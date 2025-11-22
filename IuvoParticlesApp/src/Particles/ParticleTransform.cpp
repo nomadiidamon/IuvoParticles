@@ -46,4 +46,38 @@ namespace Particles {
 		true,    // randomSize
 		true     // randomRotation
 	};
+
+	bool ParticleTransform::IsEqual(const ParticleTransform& a, const ParticleTransform& b) {
+		return FloatEquals(a.position.x, b.position.x) &&
+			FloatEquals(a.position.y, b.position.y) &&
+			FloatEquals(a.size.x, b.size.x) &&
+			FloatEquals(a.size.y, b.size.y) &&
+			FloatEquals(a.rotation.x, b.rotation.x) &&
+			FloatEquals(a.rotation.y, b.rotation.y) &&
+			(a.randomSize == b.randomSize) &&
+			(a.randomRotation == b.randomRotation) &&
+			(a.randomPosition == b.randomPosition);
+	}
+
+	nlohmann::json ParticleTransformSerializer::Serialize(const ParticleTransform& transform) {
+		nlohmann::json j;
+		j["position"] = { transform.position.x, transform.position.y };
+		j["size"] = { transform.size.x, transform.size.y };
+		j["rotation"] = { transform.rotation.x, transform.rotation.y };
+		j["randomSize"] = transform.randomSize;
+		j["randomRotation"] = transform.randomRotation;
+		j["randomPosition"] = transform.randomPosition;
+		return j;
+	}
+	ParticleTransform ParticleTransformSerializer::Deserialize(const nlohmann::json& j) {
+		ParticleTransform transform;
+		transform.position = ImVec2(j["position"][0], j["position"][1]);
+		transform.size = ImVec2(j["size"][0], j["size"][1]);
+		transform.baseSize = transform.size;
+		transform.rotation = ImVec2(j["rotation"][0], j["rotation"][1]);
+		transform.randomSize = j["randomSize"];
+		transform.randomRotation = j["randomRotation"];
+		transform.randomPosition = j["randomPosition"];
+		return transform;
+	}
 }

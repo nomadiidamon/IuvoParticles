@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui.h"
+#include "../../json/src/json.hpp"
 
 namespace Particles {
 
@@ -29,6 +30,7 @@ namespace Particles {
 		static const ParticleAnimation2D DRIFTING;
 		static const ParticleAnimation2D SPINNING;
 		static const ParticleAnimation2D LIGHTWIEGHT_DRIFT;
+		static bool IsEqual(const ParticleAnimation2D& a, const ParticleAnimation2D& b);
 
 	};
 	struct ParticleAnimation2DRange {
@@ -63,6 +65,12 @@ namespace Particles {
 		static const ParticleAnimation2DRange DEFAULT_ANIMATION_RANGE;
 	};
 
+	static class ParticleAnimation2DSerializer : nlohmann::json {
+
+	public:
+		static nlohmann::json Serialize(const ParticleAnimation2D& animation);
+		static ParticleAnimation2D Deserialize(const nlohmann::json& j);
+	};
 
 
 }

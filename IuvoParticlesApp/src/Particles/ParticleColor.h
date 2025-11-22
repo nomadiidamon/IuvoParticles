@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui.h"
+#include "../../json/src/json.hpp"
 
 namespace Particles {
 	enum class ParticleColorPreset {
@@ -47,6 +48,7 @@ namespace Particles {
 
 		static ParticleColor CreateRandomColor();
 		static ParticleColor CreateRandomColorInRange(const ImVec4& minColor, const ImVec4& maxColor);
+		static bool IsEqual(const ParticleColor& a, const ParticleColor& b);
 	};
 	struct ParticleColorRange {
 		bool enforceConstraints = false;
@@ -66,4 +68,11 @@ namespace Particles {
 		float defaultColorFadeSpeed = 0.25f;
 		static const ParticleColorRange DEFAULT_COLOR_RANGE;
 	};
+
+	class ParticleColorSerializer : nlohmann::json {
+	public:
+		static nlohmann::json Serialize(const ParticleColor& color);
+		static ParticleColor Deserialize(const nlohmann::json& j);
+	};
+
 }

@@ -142,4 +142,40 @@ namespace Particles
 	ImVec4(0.6f, 0.0f, 1.0f, 1.0f),
 	0.4f, true, true, true, false
 	};
+
+	bool ParticleColor::IsEqual(const ParticleColor& a, const ParticleColor& b) {
+		return ColorEquals(a.startColor, b.startColor) &&
+			ColorEquals(a.endColor, b.endColor) &&
+			ColorEquals(a.currColor, b.currColor) &&
+			FloatEquals(a.lerpSpeed, b.lerpSpeed) &&
+			(a.lerpColor == b.lerpColor) &&
+			(a.fadeColor == b.fadeColor) &&
+			(a.useAlpha == b.useAlpha) &&
+			(a.randomizeColor == b.randomizeColor);
+	}
+
+	nlohmann::json ParticleColorSerializer::Serialize(const ParticleColor& color) {
+		nlohmann::json j;
+		j["startColor"] = { color.startColor.x, color.startColor.y, color.startColor.z, color.startColor.w };
+		j["endColor"] = { color.endColor.x, color.endColor.y, color.endColor.z, color.endColor.w };
+		j["currColor"] = { color.currColor.x, color.currColor.y, color.currColor.z, color.currColor.w };
+		j["lerpSpeed"] = color.lerpSpeed;
+		j["lerpColor"] = color.lerpColor;
+		j["fadeColor"] = color.fadeColor;
+		j["useAlpha"] = color.useAlpha;
+		j["randomizeColor"] = color.randomizeColor;
+		return j;
+	}
+	ParticleColor ParticleColorSerializer::Deserialize(const nlohmann::json& j) {
+		ParticleColor color;
+		color.startColor = ImVec4(j["startColor"][0], j["startColor"][1], j["startColor"][2], j["startColor"][3]);
+		color.endColor = ImVec4(j["endColor"][0], j["endColor"][1], j["endColor"][2], j["endColor"][3]);
+		color.currColor = ImVec4(j["currColor"][0], j["currColor"][1], j["currColor"][2], j["currColor"][3]);
+		color.lerpSpeed = j["lerpSpeed"];
+		color.lerpColor = j["lerpColor"];
+		color.fadeColor = j["fadeColor"];
+		color.useAlpha = j["useAlpha"];
+		color.randomizeColor = j["randomizeColor"];
+		return color;
+	}
 }
