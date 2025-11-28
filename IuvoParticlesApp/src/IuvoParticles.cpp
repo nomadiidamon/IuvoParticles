@@ -2,6 +2,7 @@
 #include "Walnut/EntryPoint.h"
 #include "Walnut/Image.h"
 #include "ParticleLayers/ParticleSystemLayers.h"
+#include "ParticleLayers/GalaxyParticleLayer.h"
 
 class ExampleLayer : public Walnut::Layer
 {
@@ -423,17 +424,23 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.Height = 1400;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	auto particleLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER>();
-	auto propertiesLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
-	propertiesLayer->SetParticleLayer(particleLayer.get());
-	app->PushLayer(particleLayer);
-	app->PushLayer(propertiesLayer);
+	//auto particleLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER>();
+	//auto propertiesLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
+	//propertiesLayer->SetParticleLayer(particleLayer.get());
+	//app->PushLayer(particleLayer);
+	//app->PushLayer(propertiesLayer);
 
 	//auto emitterLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_LAYER>();
 	//auto emitterPropertiesLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_PROPERTIES>();
 	//emitterPropertiesLayer->SetEmitterLayer(emitterLayer.get());
 	//app->PushLayer(emitterLayer);
 	//app->PushLayer(emitterPropertiesLayer);
+
+	auto galaxyLayer = std::make_shared<Particles::IMGUI_GALAXY_LAYER>();
+	auto galaxyProps = std::make_shared<Particles::IMGUI_GALAXY_LAYER_PROPERTIES>();
+	galaxyProps->SetGalaxyLayer(galaxyLayer.get());
+	app->PushLayer(galaxyLayer);
+	app->PushLayer(galaxyProps);
 
 	app->SetMenubarCallback([app]()
 		{
