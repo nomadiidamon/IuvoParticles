@@ -313,6 +313,8 @@ namespace Particles {
 
 			// Update particles: apply gravity and drag, then call existing UpdateParticle
 			for (auto& particle : particles) {
+				if (!&particle) continue;
+
 				// apply gravity (as acceleration) to the velocity vector
 				if (particle.animation.canMove) {
 					// convert to world velocity vector

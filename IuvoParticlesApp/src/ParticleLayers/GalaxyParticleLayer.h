@@ -167,8 +167,8 @@ namespace Particles {
 					draw_list->AddCircleFilled(ImVec2(centerPt.x, centerPt.y), halfSize * 0.6f, col, 12);
 				}
 
-				ImGui::End();
 			}
+				ImGui::End();
 		}
 
 		virtual void OnUpdate(float ts) override

@@ -17,6 +17,21 @@ namespace Particles {
 		return out;
 	}
 
+	RectParticle RectParticleSpawner::CreateParticle(const ParticleTransform& transform, const ParticleColor& color, const ParticleLifetime& lifetime, const ParticleAnimation2D& animation)
+	{
+		RectParticle particle;
+		particle.transform = transform;
+		if (particle.transform.baseSize.x <= 0.0f || particle.transform.baseSize.y <= 0.0f)
+			particle.transform.baseSize = particle.transform.size;
+		particle.animation = animation;
+		particle.color = color;
+		particle.color.currColor = color.startColor;
+		particle.lifetime = lifetime;
+		particle.transform.center = ImVec2(transform.position.x + transform.size.x * 0.5f,
+			transform.position.y + transform.size.y * 0.5f);
+		return particle;
+	}
+
 	RectParticle RectParticleSpawner::CreateRandom(const ImVec2& view_size) {
 		RectParticle particle;
 		//auto& cfg = GetParticleConfig();

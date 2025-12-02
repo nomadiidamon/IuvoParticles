@@ -416,6 +416,43 @@ public:
 
 };
 
+class ContentPropertiesLayer : public Walnut::Layer
+{
+public:
+
+	Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES* particlePropertiesLayer;
+	Particles::IMGUI_PARTICLE_EMITTER_PROPERTIES* emitterPropertiesLayer;
+	Particles::IMGUI_GALAXY_LAYER_PROPERTIES* galaxyPropertiesLayer;
+
+	virtual void OnUIRender() override
+	{
+		ImGui::Begin("Hello");
+		ImGui::Button("Button");
+		ImGui::End();
+
+		ImGui::ShowDemoWindow();
+	}
+};
+
+class ContentLayer : public Walnut::Layer
+{
+public:
+
+	Particles::IMGUI_2D_PARTICLE_LAYER* particleLayer;
+	Particles::IMGUI_PARTICLE_EMITTER_LAYER* emitterLayer;
+	Particles::IMGUI_GALAXY_LAYER* galaxyLayer;
+
+	virtual void OnUIRender() override
+	{
+		ImGui::Begin("This is setup to gatekeep different layers from running");
+		ImGui::Button("Button");
+		ImGui::End();
+
+		//ImGui::ShowDemoWindow();
+	}
+};
+
+
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
@@ -424,23 +461,34 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.Height = 1400;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	//auto particleLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER>();
-	//auto propertiesLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
-	//propertiesLayer->SetParticleLayer(particleLayer.get());
-	//app->PushLayer(particleLayer);
-	//app->PushLayer(propertiesLayer);
+	auto particleLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER>();
+	auto propertiesLayer = std::make_shared<Particles::IMGUI_2D_PARTICLE_LAYER_PROPERTIES>();
+	propertiesLayer->SetParticleLayer(particleLayer.get());
+	app->PushLayer(particleLayer);
+	app->PushLayer(propertiesLayer);
 
-	//auto emitterLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_LAYER>();
-	//auto emitterPropertiesLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_PROPERTIES>();
-	//emitterPropertiesLayer->SetEmitterLayer(emitterLayer.get());
-	//app->PushLayer(emitterLayer);
-	//app->PushLayer(emitterPropertiesLayer);
+	auto emitterLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_LAYER>();
+	auto emitterPropertiesLayer = std::make_shared<Particles::IMGUI_PARTICLE_EMITTER_PROPERTIES>();
+	emitterPropertiesLayer->SetEmitterLayer(emitterLayer.get());
+	app->PushLayer(emitterLayer);
+	app->PushLayer(emitterPropertiesLayer);
 
 	auto galaxyLayer = std::make_shared<Particles::IMGUI_GALAXY_LAYER>();
 	auto galaxyProps = std::make_shared<Particles::IMGUI_GALAXY_LAYER_PROPERTIES>();
 	galaxyProps->SetGalaxyLayer(galaxyLayer.get());
 	app->PushLayer(galaxyLayer);
 	app->PushLayer(galaxyProps);
+
+
+	auto contentLayer = std::make_shared<ContentLayer>();
+	contentLayer->emitterLayer = emitterLayer.get();
+	contentLayer->particleLayer = particleLayer.get();
+	contentLayer->galaxyLayer = galaxyLayer.get();
+	auto contentPropertiesLayer = std::make_shared<ContentPropertiesLayer>();
+	contentPropertiesLayer->emitterPropertiesLayer = emitterPropertiesLayer.get();
+	contentPropertiesLayer->particlePropertiesLayer = propertiesLayer.get();
+	contentPropertiesLayer->galaxyPropertiesLayer = galaxyProps.get();
+	app->PushLayer(contentLayer);
 
 	app->SetMenubarCallback([app]()
 		{

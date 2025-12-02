@@ -10,6 +10,10 @@ namespace Particles {
 
 
 	bool RectParticleLifetimeController::IsExpired(const RectParticle& particle, float& outLifeRatio) {
+		if (!&particle) {
+			outLifeRatio = 0.0f;
+			return true;
+		}
 		if (particle.lifetime.lifetime >= particle.lifetime.maxLifetime) {
 			outLifeRatio = 0.0f;
 			return true;

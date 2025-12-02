@@ -9,7 +9,7 @@ namespace Particles {
 	public:
 		RectParticleController(RectParticle& p) : particle(p) {}
 
-		void Update(float ts, const ImVec2& view_size, std::vector<RectParticle>& container, bool useDefaultParticle = false, const RectParticle* defaultParticle = nullptr) {
+		void Update(float ts, const ImVec2& view_size, std::vector<RectParticle>& container, bool useDefaultParticle = true, const RectParticle* defaultParticle = nullptr) {
 			float lifetimeRatio = 0.0f;
 			if (RectParticleLifetimeController::IsExpired(particle, lifetimeRatio)) {
 				Reset(view_size, container, useDefaultParticle, defaultParticle);
@@ -41,13 +41,17 @@ namespace Particles {
 			}
 
 			if (useDefaultParticle && defaultParticle) {
-				particle = RectParticleSpawner::FromTemplate(*defaultParticle);
+				particle = RectParticleSpawner::CreateParticle(defaultParticle->transform, defaultParticle->color, defaultParticle->lifetime, defaultParticle->animation);
 				particle.lifetime.lifetime = 0.0f;
 				container.push_back(particle);
 				return;
 			}
-			particle = RectParticleSpawner::CreateRandom(view_size);
-			container.push_back(particle);
+			else {
+
+				particle = RectParticleSpawner::CreateRandom(view_size);
+				container.push_back(particle);
+				return;
+			}
 		}
 
 		void UpdateCenter() {
